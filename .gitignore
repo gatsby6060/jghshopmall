@@ -1,0 +1,21 @@
+# 환경변수 파일
+.env
+.env.local
+.env.production
+.env.development
+
+# 로그
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Docker
+docker-compose.override.yml

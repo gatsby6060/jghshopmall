@@ -1,0 +1,160 @@
+{
+  "common": {
+    "free": "Free",
+    "won": "",
+    "loading": "Loading...",
+    "error": "An error occurred.",
+    "goHome": "Go Home",
+    "viewAll": "View All",
+    "shortcut": "Go"
+  },
+  "header": {
+    "freeShipping": "Free shipping on orders over ₩50,000",
+    "mypage": "My Page",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up",
+    "admin": "Admin",
+    "searchPlaceholder": "Search products, brands, categories",
+    "cart": "Cart",
+    "home": "Home",
+    "language": "Language"
+  },
+  "footer": {
+    "tagline": "A shopping mall offering the best products at reasonable prices.\nCustomer satisfaction is our top priority.",
+    "company": "Company",
+    "ceo": "CEO",
+    "bizNumber": "Business Reg. No.",
+    "mailOrder": "Mail-Order License",
+    "address": "Address",
+    "cs": "Customer Support",
+    "csHours": "(Weekdays 09:00~18:00)",
+    "email": "Email",
+    "customerService": "Customer Service",
+    "links": {
+      "about": "About Us",
+      "faq": "FAQ",
+      "notice": "Notice",
+      "contact": "Contact Us",
+      "returns": "Returns & Exchanges",
+      "shipping": "Shipping Info"
+    },
+    "guide": "Guide",
+    "guideLinks": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "mypage": "My Page",
+      "orders": "Order Lookup"
+    },
+    "directions": "How to Find Us",
+    "copyright": "© 2024 ShopMall. All rights reserved."
+  },
+  "categories": {
+    "fashion": "Fashion & Clothing",
+    "electronics": "Electronics",
+    "beauty": "Beauty & Cosmetics",
+    "food": "Food & Health",
+    "sports": "Sports & Leisure",
+    "furniture": "Furniture & Interior",
+    "books": "Books & Stationery",
+    "kids": "Baby & Kids",
+    "pets": "Pet Supplies",
+    "auto": "Auto Accessories"
+  },
+  "banner": {
+    "shopNow": "Shop Now",
+    "viewAll": "View All Products",
+    "slides": {
+      "spring": {
+        "title": "Spring New Arrivals",
+        "subtitle": "New Season, New Style",
+        "description": "Up to 50% Off + Free Shipping"
+      },
+      "electronics": {
+        "title": "Electronics Sale",
+        "subtitle": "Latest gadgets at the lowest prices",
+        "description": "Official brand-certified products only"
+      },
+      "beauty": {
+        "title": "Beauty Week",
+        "subtitle": "Top beauty brands all in one place",
+        "description": "Free samples on orders over ₩30,000"
+      }
+    }
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "emptyDesc": "Add items you like to your cart!",
+    "continueShopping": "Continue Shopping",
+    "loginRequired": "Login required",
+    "doLogin": "Login",
+    "orderSummary": "Order Summary",
+    "productAmount": "Product Total",
+    "shippingFee": "Shipping Fee",
+    "freeShippingRemaining": "Add {amount} more for free shipping",
+    "totalAmount": "Total Payment",
+    "order": "Place Order",
+    "removeSuccess": "Item removed.",
+    "removeError": "Failed to remove item.",
+    "quantityError": "Failed to update quantity."
+  },
+  "mypage": {
+    "title": "My Page",
+    "admin": "Admin",
+    "recentOrders": "Recent Orders",
+    "viewAll": "View All",
+    "noOrders": "No orders found.",
+    "quickMenu": {
+      "orderHistory": "Order History",
+      "addressManage": "Address Management"
+    },
+    "orderStatus": {
+      "PENDING": "Pending",
+      "PAYMENT_DONE": "Payment Complete",
+      "PREPARING": "Preparing",
+      "SHIPPED": "Shipped",
+      "DELIVERED": "Delivered",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Login",
+      "noAccount": "Don't have an account?",
+      "signup": "Sign Up",
+      "forgotPassword": "Forgot your password?"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Sign Up",
+      "hasAccount": "Already have an account?",
+      "login": "Login"
+    }
+  },
+  "products": {
+    "title": "All Products",
+    "noProducts": "No products found.",
+    "featured": "Featured Products",
+    "best": "Best Sellers",
+    "newArrivals": "New Arrivals",
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "outOfStock": "Out of Stock",
+    "discount": "Off",
+    "reviews": "Reviews",
+    "description": "Product Description",
+    "soldOut": "This item is sold out.",
+    "addToCartSuccess": "Added to cart.",
+    "addToCartError": "Failed to add to cart.",
+    "loginRequired": "Please login to continue."
+  }
+}

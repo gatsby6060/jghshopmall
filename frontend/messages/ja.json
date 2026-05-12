@@ -1,0 +1,160 @@
+{
+  "common": {
+    "free": "無料",
+    "won": "ウォン",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました。",
+    "goHome": "ホームへ",
+    "viewAll": "すべて見る",
+    "shortcut": "移動"
+  },
+  "header": {
+    "freeShipping": "5万ウォン以上のご購入で送料無料",
+    "mypage": "マイページ",
+    "logout": "ログアウト",
+    "login": "ログイン",
+    "signup": "会員登録",
+    "admin": "管理者",
+    "searchPlaceholder": "商品名、ブランド、カテゴリを検索",
+    "cart": "カート",
+    "home": "ホーム",
+    "language": "言語"
+  },
+  "footer": {
+    "tagline": "最高の商品をリーズナブルな価格で提供するショッピングモールです。\nお客様満足を最優先に考えます。",
+    "company": "会社名",
+    "ceo": "代表",
+    "bizNumber": "事業者登録番号",
+    "mailOrder": "通信販売業届出",
+    "address": "住所",
+    "cs": "カスタマーサポート",
+    "csHours": "(平日 09:00~18:00)",
+    "email": "メール",
+    "customerService": "カスタマーサービス",
+    "links": {
+      "about": "会社概要",
+      "faq": "よくある質問",
+      "notice": "お知らせ",
+      "contact": "お問い合わせ",
+      "returns": "返品・交換案内",
+      "shipping": "配送案内"
+    },
+    "guide": "ご利用案内",
+    "guideLinks": {
+      "terms": "利用規約",
+      "privacy": "プライバシーポリシー",
+      "mypage": "マイページ",
+      "orders": "注文照会"
+    },
+    "directions": "アクセス",
+    "copyright": "© 2024 ShopMall. All rights reserved."
+  },
+  "categories": {
+    "fashion": "ファッション/衣類",
+    "electronics": "電子機器",
+    "beauty": "ビューティー/化粧品",
+    "food": "食品/健康",
+    "sports": "スポーツ/レジャー",
+    "furniture": "家具/インテリア",
+    "books": "本/文具",
+    "kids": "ベビー/キッズ",
+    "pets": "ペット用品",
+    "auto": "カー用品"
+  },
+  "banner": {
+    "shopNow": "今すぐ購入",
+    "viewAll": "全商品を見る",
+    "slides": {
+      "spring": {
+        "title": "春の新作大特集",
+        "subtitle": "新シーズン、新スタイル",
+        "description": "最大50%オフ＋送料無料"
+      },
+      "electronics": {
+        "title": "電子機器特価",
+        "subtitle": "最新家電を最安値で",
+        "description": "ブランド公式認定商品のみ"
+      },
+      "beauty": {
+        "title": "ビューティーウィーク",
+        "subtitle": "人気ビューティーブランド大集合",
+        "description": "3万ウォン以上のご購入でサンプルプレゼント"
+      }
+    }
+  },
+  "cart": {
+    "title": "カート",
+    "empty": "カートが空です",
+    "emptyDesc": "気に入った商品をカートに入れてください！",
+    "continueShopping": "買い物を続ける",
+    "loginRequired": "ログインが必要です",
+    "doLogin": "ログイン",
+    "orderSummary": "注文概要",
+    "productAmount": "商品金額",
+    "shippingFee": "送料",
+    "freeShippingRemaining": "あと{amount}ウォンで送料無料",
+    "totalAmount": "合計金額",
+    "order": "注文する",
+    "removeSuccess": "商品を削除しました。",
+    "removeError": "削除に失敗しました。",
+    "quantityError": "数量変更に失敗しました。"
+  },
+  "mypage": {
+    "title": "マイページ",
+    "admin": "管理者",
+    "recentOrders": "最近の注文履歴",
+    "viewAll": "すべて見る",
+    "noOrders": "注文履歴がありません。",
+    "quickMenu": {
+      "orderHistory": "注文履歴",
+      "addressManage": "配送先管理"
+    },
+    "orderStatus": {
+      "PENDING": "注文待ち",
+      "PAYMENT_DONE": "決済完了",
+      "PREPARING": "商品準備中",
+      "SHIPPED": "配送中",
+      "DELIVERED": "配送完了",
+      "CANCELLED": "キャンセル",
+      "REFUNDED": "返金"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "ログイン",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "submit": "ログイン",
+      "noAccount": "アカウントをお持ちでないですか？",
+      "signup": "会員登録",
+      "forgotPassword": "パスワードをお忘れですか？"
+    },
+    "signup": {
+      "title": "会員登録",
+      "name": "お名前",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "confirmPassword": "パスワード確認",
+      "submit": "登録する",
+      "hasAccount": "すでにアカウントをお持ちですか？",
+      "login": "ログイン"
+    }
+  },
+  "products": {
+    "title": "全商品",
+    "noProducts": "商品がありません。",
+    "featured": "おすすめ商品",
+    "best": "ベスト商品",
+    "newArrivals": "新着商品",
+    "addToCart": "カートに入れる",
+    "buyNow": "今すぐ購入",
+    "outOfStock": "品切れ",
+    "discount": "割引",
+    "reviews": "レビュー",
+    "description": "商品説明",
+    "soldOut": "品切れ商品です。",
+    "addToCartSuccess": "カートに追加しました。",
+    "addToCartError": "カートへの追加に失敗しました。",
+    "loginRequired": "ログイン後にご利用ください。"
+  }
+}

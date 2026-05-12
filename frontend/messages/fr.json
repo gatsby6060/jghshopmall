@@ -1,0 +1,160 @@
+{
+  "common": {
+    "free": "Gratuit",
+    "won": "₩",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite.",
+    "goHome": "Accueil",
+    "viewAll": "Voir tout",
+    "shortcut": "Accéder"
+  },
+  "header": {
+    "freeShipping": "Livraison gratuite dès 50 000 ₩",
+    "mypage": "Mon compte",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "admin": "Admin",
+    "searchPlaceholder": "Rechercher produits, marques, catégories",
+    "cart": "Panier",
+    "home": "Accueil",
+    "language": "Langue"
+  },
+  "footer": {
+    "tagline": "Une boutique proposant les meilleurs produits à des prix raisonnables.\nLa satisfaction client est notre priorité absolue.",
+    "company": "Entreprise",
+    "ceo": "PDG",
+    "bizNumber": "N° d'immatriculation",
+    "mailOrder": "Licence vente par correspondance",
+    "address": "Adresse",
+    "cs": "Service Client",
+    "csHours": "(Jours ouvrables 09:00~18:00)",
+    "email": "E-mail",
+    "customerService": "Service Client",
+    "links": {
+      "about": "À propos",
+      "faq": "FAQ",
+      "notice": "Annonces",
+      "contact": "Nous contacter",
+      "returns": "Retours & Échanges",
+      "shipping": "Informations livraison"
+    },
+    "guide": "Guide",
+    "guideLinks": {
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "mypage": "Mon compte",
+      "orders": "Suivi de commande"
+    },
+    "directions": "Nous trouver",
+    "copyright": "© 2024 ShopMall. Tous droits réservés."
+  },
+  "categories": {
+    "fashion": "Mode & Vêtements",
+    "electronics": "Électronique",
+    "beauty": "Beauté & Cosmétiques",
+    "food": "Alimentation & Santé",
+    "sports": "Sports & Loisirs",
+    "furniture": "Mobilier & Intérieur",
+    "books": "Livres & Papeterie",
+    "kids": "Bébé & Enfants",
+    "pets": "Animaux de compagnie",
+    "auto": "Accessoires auto"
+  },
+  "banner": {
+    "shopNow": "Acheter maintenant",
+    "viewAll": "Voir tous les produits",
+    "slides": {
+      "spring": {
+        "title": "Nouveautés de printemps",
+        "subtitle": "Nouvelle saison, nouveau style",
+        "description": "Jusqu'à -50% + Livraison gratuite"
+      },
+      "electronics": {
+        "title": "Vente Électronique",
+        "subtitle": "Les derniers gadgets aux meilleurs prix",
+        "description": "Produits certifiés marque officielle uniquement"
+      },
+      "beauty": {
+        "title": "Semaine Beauté",
+        "subtitle": "Les meilleures marques beauté réunies",
+        "description": "Échantillons offerts dès 30 000 ₩ d'achat"
+      }
+    }
+  },
+  "cart": {
+    "title": "Panier",
+    "empty": "Votre panier est vide",
+    "emptyDesc": "Ajoutez des articles que vous aimez !",
+    "continueShopping": "Continuer les achats",
+    "loginRequired": "Connexion requise",
+    "doLogin": "Se connecter",
+    "orderSummary": "Récapitulatif de commande",
+    "productAmount": "Total produits",
+    "shippingFee": "Frais de livraison",
+    "freeShippingRemaining": "Encore {amount} ₩ pour la livraison gratuite",
+    "totalAmount": "Total à payer",
+    "order": "Commander",
+    "removeSuccess": "Article supprimé.",
+    "removeError": "Échec de la suppression.",
+    "quantityError": "Échec de la mise à jour de la quantité."
+  },
+  "mypage": {
+    "title": "Mon compte",
+    "admin": "Admin",
+    "recentOrders": "Commandes récentes",
+    "viewAll": "Voir tout",
+    "noOrders": "Aucune commande trouvée.",
+    "quickMenu": {
+      "orderHistory": "Historique des commandes",
+      "addressManage": "Gestion des adresses"
+    },
+    "orderStatus": {
+      "PENDING": "En attente",
+      "PAYMENT_DONE": "Paiement effectué",
+      "PREPARING": "En préparation",
+      "SHIPPED": "Expédié",
+      "DELIVERED": "Livré",
+      "CANCELLED": "Annulé",
+      "REFUNDED": "Remboursé"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "noAccount": "Pas encore de compte ?",
+      "signup": "S'inscrire",
+      "forgotPassword": "Mot de passe oublié ?"
+    },
+    "signup": {
+      "title": "Inscription",
+      "name": "Nom",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "S'inscrire",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "login": "Se connecter"
+    }
+  },
+  "products": {
+    "title": "Tous les produits",
+    "noProducts": "Aucun produit trouvé.",
+    "featured": "Produits en vedette",
+    "best": "Meilleures ventes",
+    "newArrivals": "Nouveautés",
+    "addToCart": "Ajouter au panier",
+    "buyNow": "Acheter maintenant",
+    "outOfStock": "Rupture de stock",
+    "discount": "Réduction",
+    "reviews": "Avis",
+    "description": "Description du produit",
+    "soldOut": "Cet article est épuisé.",
+    "addToCartSuccess": "Ajouté au panier.",
+    "addToCartError": "Échec de l'ajout au panier.",
+    "loginRequired": "Veuillez vous connecter pour continuer."
+  }
+}

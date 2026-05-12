@@ -1,0 +1,160 @@
+{
+  "common": {
+    "free": "무료",
+    "won": "원",
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다.",
+    "goHome": "홈으로",
+    "viewAll": "전체 보기",
+    "shortcut": "바로가기"
+  },
+  "header": {
+    "freeShipping": "무료배송 5만원 이상 구매 시",
+    "mypage": "마이페이지",
+    "logout": "로그아웃",
+    "login": "로그인",
+    "signup": "회원가입",
+    "admin": "관리자",
+    "searchPlaceholder": "상품명, 브랜드, 카테고리 검색",
+    "cart": "장바구니",
+    "home": "홈",
+    "language": "언어"
+  },
+  "footer": {
+    "tagline": "최고의 상품을 합리적인 가격에 제공하는 쇼핑몰입니다.\n고객 만족을 최우선으로 생각합니다.",
+    "company": "상호명",
+    "ceo": "대표",
+    "bizNumber": "사업자등록번호",
+    "mailOrder": "통신판매업신고",
+    "address": "주소",
+    "cs": "고객센터",
+    "csHours": "(평일 09:00~18:00)",
+    "email": "이메일",
+    "customerService": "고객 서비스",
+    "links": {
+      "about": "회사 소개",
+      "faq": "자주 묻는 질문",
+      "notice": "공지사항",
+      "contact": "고객 문의",
+      "returns": "반품/교환 안내",
+      "shipping": "배송 안내"
+    },
+    "guide": "이용 안내",
+    "guideLinks": {
+      "terms": "이용약관",
+      "privacy": "개인정보처리방침",
+      "mypage": "마이페이지",
+      "orders": "주문 조회"
+    },
+    "directions": "오시는 길",
+    "copyright": "© 2024 ShopMall. All rights reserved."
+  },
+  "categories": {
+    "fashion": "패션/의류",
+    "electronics": "전자제품",
+    "beauty": "뷰티/화장품",
+    "food": "식품/건강",
+    "sports": "스포츠/레저",
+    "furniture": "가구/인테리어",
+    "books": "도서/문구",
+    "kids": "유아/아동",
+    "pets": "반려동물",
+    "auto": "자동차용품"
+  },
+  "banner": {
+    "shopNow": "지금 쇼핑하기",
+    "viewAll": "전체 상품 보기",
+    "slides": {
+      "spring": {
+        "title": "봄 신상 대전",
+        "subtitle": "새로운 시즌, 새로운 스타일",
+        "description": "최대 50% 할인 + 무료배송"
+      },
+      "electronics": {
+        "title": "전자제품 특가",
+        "subtitle": "최신 가전제품을 최저가로",
+        "description": "브랜드 공식 인증 제품만"
+      },
+      "beauty": {
+        "title": "뷰티 위크",
+        "subtitle": "인기 뷰티 브랜드 총집합",
+        "description": "3만원 이상 구매 시 샘플 증정"
+      }
+    }
+  },
+  "cart": {
+    "title": "장바구니",
+    "empty": "장바구니가 비어있습니다",
+    "emptyDesc": "마음에 드는 상품을 담아보세요!",
+    "continueShopping": "쇼핑 계속하기",
+    "loginRequired": "로그인이 필요합니다",
+    "doLogin": "로그인하기",
+    "orderSummary": "주문 요약",
+    "productAmount": "상품 금액",
+    "shippingFee": "배송비",
+    "freeShippingRemaining": "{amount}원 더 구매 시 무료배송",
+    "totalAmount": "총 결제 금액",
+    "order": "주문하기",
+    "removeSuccess": "상품이 삭제되었습니다.",
+    "removeError": "삭제에 실패했습니다.",
+    "quantityError": "수량 변경에 실패했습니다."
+  },
+  "mypage": {
+    "title": "마이페이지",
+    "admin": "관리자",
+    "recentOrders": "최근 주문 내역",
+    "viewAll": "전체 보기",
+    "noOrders": "주문 내역이 없습니다.",
+    "quickMenu": {
+      "orderHistory": "주문 내역",
+      "addressManage": "배송지 관리"
+    },
+    "orderStatus": {
+      "PENDING": "주문 대기",
+      "PAYMENT_DONE": "결제 완료",
+      "PREPARING": "상품 준비",
+      "SHIPPED": "배송 중",
+      "DELIVERED": "배송 완료",
+      "CANCELLED": "취소",
+      "REFUNDED": "환불"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "로그인",
+      "email": "이메일",
+      "password": "비밀번호",
+      "submit": "로그인",
+      "noAccount": "계정이 없으신가요?",
+      "signup": "회원가입",
+      "forgotPassword": "비밀번호를 잊으셨나요?"
+    },
+    "signup": {
+      "title": "회원가입",
+      "name": "이름",
+      "email": "이메일",
+      "password": "비밀번호",
+      "confirmPassword": "비밀번호 확인",
+      "submit": "가입하기",
+      "hasAccount": "이미 계정이 있으신가요?",
+      "login": "로그인"
+    }
+  },
+  "products": {
+    "title": "전체 상품",
+    "noProducts": "상품이 없습니다.",
+    "featured": "추천 상품",
+    "best": "베스트 상품",
+    "newArrivals": "신상품",
+    "addToCart": "장바구니 담기",
+    "buyNow": "바로 구매",
+    "outOfStock": "품절",
+    "discount": "할인",
+    "reviews": "리뷰",
+    "description": "상품 설명",
+    "soldOut": "품절된 상품입니다.",
+    "addToCartSuccess": "장바구니에 담겼습니다.",
+    "addToCartError": "장바구니 담기에 실패했습니다.",
+    "loginRequired": "로그인 후 이용해주세요."
+  }
+}
