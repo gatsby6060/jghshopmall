@@ -32,7 +32,9 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 .orElseGet(() -> userRepository.save(
                         User.builder()
                                 .email(userInfo.email() != null ? userInfo.email() : userInfo.id() + "@" + registrationId + ".oauth")
-                                .name(userInfo.name())
+                                .name(userInfo.name() != null && !userInfo.name().trim().isEmpty() 
+                                        ? userInfo.name() 
+                                        : registrationId.toUpperCase() + "_" + userInfo.id())
                                 .profileImageUrl(userInfo.profileImageUrl())
                                 .provider(provider)
                                 .providerId(userInfo.id())
@@ -42,7 +44,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
         return new DefaultOAuth2User(
                 java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
-                Map.of("id", user.getId(), "email", user.getEmail(), "name", user.getName()),
+                Map.of("id", user.getId(), "email", user.getEmail(), "name", user.getName(), "provider", user.getProvider().name()),
                 "id"
         );
     }

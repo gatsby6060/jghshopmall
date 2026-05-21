@@ -52,6 +52,9 @@ export default function Header() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
+                <span className="text-gray-300 mr-2">
+                  <span className="text-indigo-400 font-semibold">{t('welcome', { name: user?.name || '' })}</span>
+                </span>
                 <Link href={`/${locale}/mypage`} className="hover:text-gray-300">
                   {t('mypage')}
                 </Link>

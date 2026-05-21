@@ -9,7 +9,9 @@ import toast from 'react-hot-toast';
 interface JwtPayload {
   sub: string;
   email: string;
+  name?: string;
   role: string;
+  provider?: 'LOCAL' | 'GOOGLE' | 'NAVER' | 'KAKAO' | 'APPLE';
   exp: number;
 }
 
@@ -29,9 +31,9 @@ function OAuth2CallbackContent() {
           {
             id: Number(decoded.sub),
             email: decoded.email,
-            name: '',
+            name: decoded.name || '',
             role: decoded.role as 'USER' | 'ADMIN',
-            provider: 'GOOGLE',
+            provider: decoded.provider || 'GOOGLE',
             createdAt: '',
           },
           accessToken,

@@ -1,19 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
 
-// 브라우저 환경에서는 현재 호스트의 8080 포트로 API 호출
-// 빌드 타임에 고정되지 않고 런타임에 결정
+// 브라우저 환경에서는 상대 경로를 사용하여 Next.js rewrites 프록시를 통하도록 함
 function getApiUrl(): string {
   if (typeof window !== 'undefined') {
-    // 브라우저 환경: 현재 접속 중인 호스트의 8080 포트 사용
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    // manus.computer 프록시 환경 처리
-    if (hostname.includes('manus.computer')) {
-      // 3000-xxx.manus.computer -> 8080-xxx.manus.computer
-      return `${protocol}//${hostname.replace(/^3000-/, '8080-')}`;
-    }
-    // 로컬 환경
-    return `${protocol}//${hostname}:8080`;
+    // 브라우저 환경: 상대 경로 사용 (next.config.ts의 rewrites가 /api, /oauth2 등을 백엔드로 프록시함)
+    return '';
   }
   // 서버 사이드 렌더링: 컨테이너 내부 주소
   return process.env.INTERNAL_API_URL || 'http://backend:8080';

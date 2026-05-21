@@ -18,7 +18,8 @@
     "searchPlaceholder": "상품명, 브랜드, 카테고리 검색",
     "cart": "장바구니",
     "home": "홈",
-    "language": "언어"
+    "language": "언어",
+    "welcome": "{name}님"
   },
   "footer": {
     "tagline": "최고의 상품을 합리적인 가격에 제공하는 쇼핑몰입니다.\n고객 만족을 최우선으로 생각합니다.",

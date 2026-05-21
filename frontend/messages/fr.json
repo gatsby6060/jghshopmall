@@ -18,7 +18,8 @@
     "searchPlaceholder": "Rechercher produits, marques, catégories",
     "cart": "Panier",
     "home": "Accueil",
-    "language": "Langue"
+    "language": "Langue",
+    "welcome": "Bienvenue, {name}"
   },
   "footer": {
     "tagline": "Une boutique proposant les meilleurs produits à des prix raisonnables.\nLa satisfaction client est notre priorité absolue.",

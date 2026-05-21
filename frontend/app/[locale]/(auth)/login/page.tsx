@@ -17,8 +17,6 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
@@ -49,7 +47,8 @@ export default function LoginPage() {
   };
 
   const handleSocialLogin = (provider: string) => {
-    window.location.href = `${API_URL}/oauth2/authorization/${provider}`;
+    // Next.js rewrites 프록시를 통해 백엔드로 전달되도록 상대 경로 사용
+    window.location.href = `/oauth2/authorization/${provider}`;
   };
 
   return (

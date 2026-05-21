@@ -28,12 +28,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
         Long userId = (Long) oAuth2User.getAttributes().get("id");
         String email = (String) oAuth2User.getAttributes().get("email");
+        String name = (String) oAuth2User.getAttributes().get("name");
+        String provider = (String) oAuth2User.getAttributes().get("provider");
         String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 
-        String accessToken = jwtTokenProvider.generateAccessToken(userId, email, role);
+        String accessToken = jwtTokenProvider.generateAccessToken(userId, email, name, role, provider);
         String refreshToken = jwtTokenProvider.generateRefreshToken(userId);
 
-        String redirectUrl = frontendUrl + "/oauth2/callback?accessToken=" + accessToken + "&refreshToken=" + refreshToken;
+        String redirectUrl = "/oauth2/callback?accessToken=" + accessToken + "&refreshToken=" + refreshToken;
         response.sendRedirect(redirectUrl);
     }
 }

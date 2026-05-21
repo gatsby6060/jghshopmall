@@ -18,7 +18,8 @@
     "searchPlaceholder": "Search products, brands, categories",
     "cart": "Cart",
     "home": "Home",
-    "language": "Language"
+    "language": "Language",
+    "welcome": "Welcome, {name}"
   },
   "footer": {
     "tagline": "A shopping mall offering the best products at reasonable prices.\nCustomer satisfaction is our top priority.",

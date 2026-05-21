@@ -18,7 +18,8 @@
     "searchPlaceholder": "商品名、ブランド、カテゴリを検索",
     "cart": "カート",
     "home": "ホーム",
-    "language": "言語"
+    "language": "言語",
+    "welcome": "{name}様"
   },
   "footer": {
     "tagline": "最高の商品をリーズナブルな価格で提供するショッピングモールです。\nお客様満足を最優先に考えます。",

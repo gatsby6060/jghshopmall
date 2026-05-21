@@ -4,7 +4,7 @@
 INSERT IGNORE INTO users (email, password, name, role, provider, enabled, created_at, updated_at)
 VALUES (
   'admin@shopmall.com',
-  '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH',
+  '$2a$10$0KMdIF1dUPZvOkfsZneZbuqYGsvKG3ukSFAOwx4nYTfGDva0JrwSy',
   '관리자', 'ADMIN', 'LOCAL', true, NOW(), NOW()
 );
 
@@ -12,7 +12,7 @@ VALUES (
 INSERT IGNORE INTO users (email, password, name, role, provider, enabled, created_at, updated_at)
 VALUES (
   'test@shopmall.com',
-  '$2a$10$X7oBkMfMKqXnS8K5GjLwXOqQzMXfbH.9VqGpJz3sDcpMxBJ5hKxYi',
+  '$2a$10$bwuGTc8yZ5ONKHQ2n6lYZOApOwXJFUC5Qwu7cuSJcQWkHBePr9Fjq',
   '테스트유저', 'USER', 'LOCAL', true, NOW(), NOW()
 );
 
