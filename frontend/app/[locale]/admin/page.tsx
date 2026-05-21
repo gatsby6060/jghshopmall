@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api';
 import { Users, Package, ShoppingCart, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 
 export default function AdminDashboardPage() {
+  const locale = useLocale();
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'dashboard'],
     queryFn: () => adminApi.getDashboard(),
@@ -76,15 +78,15 @@ export default function AdminDashboardPage() {
         <div className="bg-white rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">빠른 작업</h2>
           <div className="space-y-3">
-            <Link href="/admin/products" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <Link href={`/${locale}/admin/products`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
               <Package size={18} className="text-indigo-600" />
               <span className="text-sm font-medium">새 상품 등록</span>
             </Link>
-            <Link href="/admin/categories" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <Link href={`/${locale}/admin/categories`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
               <Package size={18} className="text-green-600" />
               <span className="text-sm font-medium">카테고리 관리</span>
             </Link>
-            <Link href="/admin/orders" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <Link href={`/${locale}/admin/orders`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
               <ShoppingCart size={18} className="text-purple-600" />
               <span className="text-sm font-medium">주문 처리</span>
             </Link>
