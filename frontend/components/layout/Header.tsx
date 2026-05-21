@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import { cartApi } from '@/lib/api';
 
 export default function Header() {
   const router = useRouter();
@@ -15,8 +16,30 @@ export default function Header() {
   const t = useTranslations('header');
   const tCat = useTranslations('categories');
   const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const { setItems } = useCartStore();
   const totalCount = useCartStore((state) => state.totalCount());
   const [searchQuery, setSearchQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      cartApi.getCartItems()
+        .then((res) => {
+          if (res?.data?.data) {
+            setItems(res.data.data);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to sync cart items:', err);
+        });
+    } else {
+      setItems([]);
+    }
+  }, [isAuthenticated, setItems]);
 
   const categories = [
     { id: 1, name: tCat('fashion'), slug: 'fashion' },
@@ -125,7 +148,7 @@ export default function Header() {
               className="relative flex flex-col items-center text-gray-600 hover:text-indigo-600"
             >
               <ShoppingCart size={22} />
-              {totalCount > 0 && (
+              {mounted && totalCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {totalCount > 9 ? '9+' : totalCount}
                 </span>

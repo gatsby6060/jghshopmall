@@ -23,6 +23,8 @@ export default function CartPage() {
     queryKey: ['cart'],
     queryFn: () => cartApi.getCartItems(),
     enabled: isAuthenticated,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   useEffect(() => {
