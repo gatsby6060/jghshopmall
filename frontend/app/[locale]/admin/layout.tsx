@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import {
   LayoutDashboard,
   Package,
@@ -25,13 +26,14 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const locale = useLocale();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'ADMIN') {
-      router.push('/login');
+      router.push(`/${locale}/login`);
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, locale]);
 
   if (!isAuthenticated || user?.role !== 'ADMIN') return null;
 
@@ -40,18 +42,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* 사이드바 */}
       <aside className="w-64 bg-gray-900 text-white flex flex-col">
         <div className="p-6 border-b border-gray-700">
-          <Link href="/" className="text-xl font-bold text-indigo-400">ShopMall</Link>
+          <Link href={`/${locale}`} className="text-xl font-bold text-indigo-400">ShopMall</Link>
           <p className="text-xs text-gray-400 mt-1">관리자 패널</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const localizedHref = `/${locale}${item.href}`;
+            const isActive = pathname === localizedHref;
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={localizedHref}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition ${
                   isActive
                     ? 'bg-indigo-600 text-white'
@@ -67,14 +70,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="p-4 border-t border-gray-700 space-y-2">
           <Link
-            href="/"
+            href={`/${locale}`}
             className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition"
           >
             <Home size={18} />
             쇼핑몰로 이동
           </Link>
           <button
-            onClick={() => { clearAuth(); router.push('/login'); }}
+            onClick={() => { clearAuth(); router.push(`/${locale}/login`); }}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition"
           >
             <LogOut size={18} />
