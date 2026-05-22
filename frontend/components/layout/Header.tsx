@@ -36,8 +36,6 @@ export default function Header() {
         .catch((err) => {
           console.error('Failed to sync cart items:', err);
         });
-    } else {
-      setItems([]);
     }
   }, [isAuthenticated, setItems]);
 

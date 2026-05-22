@@ -8,6 +8,8 @@ import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +17,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthStore();
   const addItem = useCartStore((state) => state.addItem);
 
@@ -26,12 +30,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     if (!isAuthenticated) {
       toast.error('로그인이 필요합니다.');
-      router.push('/login');
+      router.push(`/${locale}/login`);
       return;
     }
     try {
       const res = await cartApi.addToCart({ productId: product.id, quantity: 1 });
       addItem(res.data.data);
+      queryClient.removeQueries({ queryKey: ['cart'] });
       toast.success('장바구니에 추가되었습니다.');
     } catch {
       toast.error('장바구니 추가에 실패했습니다.');

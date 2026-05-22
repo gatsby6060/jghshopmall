@@ -8,7 +8,7 @@ import { Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { cartApi } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useTranslations, useLocale } from 'next-intl';
 
@@ -16,6 +16,7 @@ export default function CartPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('cart');
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthStore();
   const { items, setItems, updateItem, removeItem, totalPrice } = useCartStore();
 
@@ -25,6 +26,7 @@ export default function CartPage() {
     enabled: isAuthenticated,
     staleTime: 0,
     gcTime: 0,
+    refetchOnMount: 'always',
   });
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function CartPage() {
     try {
       await cartApi.updateQuantity(id, quantity);
       updateItem(id, quantity);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     } catch {
       toast.error(t('quantityError'));
     }
@@ -61,6 +64,7 @@ export default function CartPage() {
     try {
       await cartApi.removeFromCart(id);
       removeItem(id);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast.success(t('removeSuccess'));
     } catch {
       toast.error(t('removeError'));

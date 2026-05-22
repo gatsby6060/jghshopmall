@@ -7,6 +7,7 @@ import com.shoppingmall.backend.domain.user.entity.User;
 import com.shoppingmall.backend.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,9 @@ public class CartController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CartItemResponse>>> getCartItems(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponse.ok(cartService.getCartItems(user.getId())));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore().mustRevalidate())
+                .body(ApiResponse.ok(cartService.getCartItems(user.getId())));
     }
 
     @PostMapping

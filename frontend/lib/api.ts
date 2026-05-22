@@ -108,7 +108,16 @@ export const authApi = {
 };
 
 export const cartApi = {
-  getCartItems: () => api.get('/api/cart'),
+  getCartItems: () => api.get('/api/cart', {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
+    params: {
+      _t: Date.now()
+    }
+  }),
   addToCart: (data: { productId: number; quantity: number }) =>
     api.post('/api/cart', data),
   updateQuantity: (id: number, quantity: number) =>

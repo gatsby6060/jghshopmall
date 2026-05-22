@@ -1,18 +1,21 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { productApi, cartApi } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 import { useState } from 'react';
-import { ShoppingCart, Package, Star } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const locale = useLocale();
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthStore();
   const addItem = useCartStore((state) => state.addItem);
   const [quantity, setQuantity] = useState(1);
@@ -24,29 +27,34 @@ export default function ProductDetailPage() {
 
   const product = data?.data?.data;
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (): Promise<boolean> => {
     if (!isAuthenticated) {
       toast.error('로그인이 필요합니다.');
-      router.push('/login');
-      return;
+      router.push(`/${locale}/login`);
+      return false;
     }
     try {
       const res = await cartApi.addToCart({ productId: product.id, quantity });
       addItem(res.data.data);
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast.success('장바구니에 추가되었습니다.');
+      return true;
     } catch {
       toast.error('장바구니 추가에 실패했습니다.');
+      return false;
     }
   };
 
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
       toast.error('로그인이 필요합니다.');
-      router.push('/login');
+      router.push(`/${locale}/login`);
       return;
     }
-    await handleAddToCart();
-    router.push('/cart');
+    const success = await handleAddToCart();
+    if (success) {
+      router.push(`/${locale}/cart`);
+    }
   };
 
   if (isLoading) {

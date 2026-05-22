@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import { orderApi, paymentApi } from '@/lib/api';
+import { orderApi, paymentApi, cartApi } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 
 declare global {
   interface Window {
@@ -35,6 +37,8 @@ type CheckoutForm = z.infer<typeof checkoutSchema>;
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { items, totalPrice, clearCart } = useCartStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -88,14 +92,26 @@ export default function CheckoutPage() {
           amount: paymentResult.amount,
         });
 
+        try {
+          await cartApi.clearCart();
+        } catch (err) {
+          console.error('Failed to clear cart on server:', err);
+        }
         clearCart();
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
         toast.success('결제가 완료되었습니다!');
-        router.push(`/orders/${order.id}`);
+        router.push(`/${locale}/orders/${order.id}`);
       } else {
         // 토스 SDK 미로드 시 모의 결제
         toast.success('주문이 완료되었습니다! (테스트 모드)');
+        try {
+          await cartApi.clearCart();
+        } catch (err) {
+          console.error('Failed to clear cart on server:', err);
+        }
         clearCart();
-        router.push(`/orders/${order.id}`);
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        router.push(`/${locale}/orders/${order.id}`);
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
