@@ -98,7 +98,7 @@ public class OrderService {
                 .build();
 
         orderItems.forEach(item -> {
-            var field = item;
+            item.setOrder(order);
             order.getOrderItems().add(item);
         });
 

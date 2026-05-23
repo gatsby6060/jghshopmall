@@ -14,12 +14,18 @@ import { useLocale } from 'next-intl';
 
 declare global {
   interface Window {
-    TossPayments: (clientKey: string) => {
-      requestPayment: (method: string, options: Record<string, unknown>) => Promise<{
-        paymentKey: string;
-        orderId: string;
-        amount: number;
-      }>;
+    IMP?: {
+      init: (storeCode: string) => void;
+      request_pay: (
+        params: Record<string, unknown>,
+        callback: (rsp: {
+          success: boolean;
+          imp_uid: string;
+          merchant_uid: string;
+          paid_amount: number;
+          error_msg?: string;
+        }) => void
+      ) => void;
     };
   }
 }
@@ -69,40 +75,61 @@ export default function CheckoutPage() {
       });
       const order = orderRes.data.data;
 
-      // 2. 토스페이먼츠 결제 요청
-      if (typeof window !== 'undefined' && window.TossPayments) {
-        const tossPayments = window.TossPayments(
-          process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || 'test_ck_dummy'
-        );
+      // 2. 포트원 결제 요청
+      if (typeof window !== 'undefined' && window.IMP) {
+        const { IMP } = window;
+        const storeCode = process.env.NEXT_PUBLIC_PORTONE_STORE_CODE || 'imp19421636';
+        IMP.init(storeCode);
 
-        const paymentResult = await tossPayments.requestPayment('카드', {
+        const orderName = items.length === 1 
+          ? items[0].productName 
+          : `${items[0].productName} 외 ${items.length - 1}건`;
+
+        IMP.request_pay({
+          pg: 'html5_inicis',
+          pay_method: 'card',
+          merchant_uid: order.orderNumber,
+          name: orderName,
           amount: finalAmount,
-          orderId: order.orderNumber,
-          orderName: items.length === 1 ? items[0].productName : `${items[0].productName} 외 ${items.length - 1}건`,
-          customerName: user?.name,
-          customerEmail: user?.email,
-          successUrl: `${window.location.origin}/orders/${order.id}?success=true`,
-          failUrl: `${window.location.origin}/checkout?fail=true`,
-        });
+          buyer_email: user?.email || '',
+          buyer_name: user?.name || formData.receiverName,
+          buyer_tel: user?.phone || formData.receiverPhone,
+          buyer_addr: `${formData.address} ${formData.addressDetail || ''}`,
+          buyer_postcode: formData.zipCode,
+          m_redirect_url: `${window.location.origin}/orders/${order.id}?success=true`,
+        }, async (rsp) => {
+          if (rsp.success) {
+            try {
+              setIsLoading(true);
+              // 3. 결제 검증 및 승인
+              await paymentApi.confirmPayment({
+                paymentKey: rsp.imp_uid,
+                orderId: rsp.merchant_uid,
+                amount: rsp.paid_amount,
+              });
 
-        // 3. 결제 승인
-        await paymentApi.confirmPayment({
-          paymentKey: paymentResult.paymentKey,
-          orderId: paymentResult.orderId,
-          amount: paymentResult.amount,
+              try {
+                await cartApi.clearCart();
+              } catch (err) {
+                console.error('Failed to clear cart on server:', err);
+              }
+              clearCart();
+              queryClient.invalidateQueries({ queryKey: ['cart'] });
+              toast.success('결제가 완료되었습니다!');
+              router.push(`/${locale}/orders/${order.id}`);
+            } catch (err: unknown) {
+              const error = err as { message?: string };
+              toast.error(error.message || '결제 검증에 실패했습니다.');
+            } finally {
+              setIsLoading(false);
+            }
+          } else {
+            toast.error(rsp.error_msg || '결제에 실패했습니다.');
+            setIsLoading(false);
+          }
         });
-
-        try {
-          await cartApi.clearCart();
-        } catch (err) {
-          console.error('Failed to clear cart on server:', err);
-        }
-        clearCart();
-        queryClient.invalidateQueries({ queryKey: ['cart'] });
-        toast.success('결제가 완료되었습니다!');
-        router.push(`/${locale}/orders/${order.id}`);
       } else {
-        // 토스 SDK 미로드 시 모의 결제
+        // 포트원 SDK 미로드 시 모의 결제
         toast.success('주문이 완료되었습니다! (테스트 모드)');
         try {
           await cartApi.clearCart();
