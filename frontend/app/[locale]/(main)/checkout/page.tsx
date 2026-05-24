@@ -11,9 +11,25 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
+import Script from 'next/script';
 
 declare global {
   interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: {
+          zonecode: string;
+          address: string;
+          bname: string;
+          buildingName: string;
+          userSelectedType: 'R' | 'J';
+          roadAddress: string;
+          jibunAddress: string;
+        }) => void;
+      }) => {
+        open: () => void;
+      };
+    };
     IMP?: {
       init: (storeCode: string) => void;
       request_pay: (
@@ -41,6 +57,23 @@ const checkoutSchema = z.object({
 
 type CheckoutForm = z.infer<typeof checkoutSchema>;
 
+const formatPhoneNumber = (value: string) => {
+  if (!value) return value;
+  const cleanNumber = value.replace(/[^\d]/g, '');
+  
+  if (cleanNumber.startsWith('02')) {
+    if (cleanNumber.length <= 2) return cleanNumber;
+    if (cleanNumber.length <= 5) return `${cleanNumber.slice(0, 2)}-${cleanNumber.slice(2)}`;
+    if (cleanNumber.length <= 9) return `${cleanNumber.slice(0, 2)}-${cleanNumber.slice(2, 5)}-${cleanNumber.slice(5)}`;
+    return `${cleanNumber.slice(0, 2)}-${cleanNumber.slice(2, 6)}-${cleanNumber.slice(6, 10)}`;
+  } else {
+    if (cleanNumber.length <= 3) return cleanNumber;
+    if (cleanNumber.length <= 6) return `${cleanNumber.slice(0, 3)}-${cleanNumber.slice(3)}`;
+    if (cleanNumber.length <= 10) return `${cleanNumber.slice(0, 3)}-${cleanNumber.slice(3, 6)}-${cleanNumber.slice(6)}`;
+    return `${cleanNumber.slice(0, 3)}-${cleanNumber.slice(3, 7)}-${cleanNumber.slice(7, 11)}`;
+  }
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
   const locale = useLocale();
@@ -49,13 +82,45 @@ export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCartStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CheckoutForm>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       receiverName: user?.name || '',
       receiverPhone: user?.phone || '',
     },
   });
+
+  const handleAddressSearch = () => {
+    if (typeof window !== 'undefined' && window.daum) {
+      new window.daum.Postcode({
+        oncomplete: (data) => {
+          let fullAddress = data.address;
+          let extraAddress = '';
+
+          if (data.userSelectedType === 'R') {
+            if (data.bname !== '') {
+              extraAddress += data.bname;
+            }
+            if (data.buildingName !== '') {
+              extraAddress += extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName;
+            }
+            fullAddress += extraAddress !== '' ? ` (${extraAddress})` : '';
+          }
+
+          setValue('zipCode', data.zonecode, { shouldValidate: true });
+          setValue('address', fullAddress, { shouldValidate: true });
+          
+          // 주소 입력 완료 후 상세 주소 필드로 포커스 이동
+          const addressDetailInput = document.getElementsByName('addressDetail')[0] as HTMLInputElement;
+          if (addressDetailInput) {
+            addressDetailInput.focus();
+          }
+        },
+      }).open();
+    } else {
+      toast.error('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+    }
+  };
 
   const shippingFee = totalPrice() >= 50000 ? 0 : 3000;
   const finalAmount = totalPrice() + shippingFee;
@@ -174,6 +239,11 @@ export default function CheckoutPage() {
                   <input
                     {...register('receiverPhone')}
                     placeholder="010-1234-5678"
+                    onChange={(e) => {
+                      const formatted = formatPhoneNumber(e.target.value);
+                      setValue('receiverPhone', formatted, { shouldValidate: true });
+                    }}
+                    maxLength={13}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                   {errors.receiverPhone && (
@@ -182,11 +252,22 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">우편번호 *</label>
-                  <input
-                    {...register('zipCode')}
-                    placeholder="12345"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      {...register('zipCode')}
+                      placeholder="우편번호"
+                      readOnly
+                      onClick={handleAddressSearch}
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 cursor-pointer focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddressSearch}
+                      className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-700 transition font-medium"
+                    >
+                      우편번호 찾기
+                    </button>
+                  </div>
                   {errors.zipCode && (
                     <p className="text-red-500 text-xs mt-1">{errors.zipCode.message}</p>
                   )}
@@ -195,7 +276,10 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">주소 *</label>
                   <input
                     {...register('address')}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    readOnly
+                    onClick={handleAddressSearch}
+                    placeholder="우편번호 찾기를 통해 주소를 입력해주세요"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 cursor-pointer focus:outline-none"
                   />
                   {errors.address && (
                     <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
@@ -260,6 +344,10 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
+      <Script 
+        src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" 
+        strategy="lazyOnload" 
+      />
     </div>
   );
 }
