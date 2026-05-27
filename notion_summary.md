@@ -281,4 +281,67 @@ feat(payment): 포트원(KG이니시스) 결제 연동 도입 및 주문 상세 
 chore(payment): 실 연동 API 검증 실패 시 모의 검증으로 우아하게 Fallback 하도록 백엔드 보완
 ```
 
+---
+---
 
+# 🗺️ [오류 해결] 카카오 지도 로드 실패 디버깅 및 신규 키 연동 & 고정밀 본사 좌표 수정
+
+## 📅 작성일: 2026-05-27
+## 👤 작성자: Antigravity
+
+---
+
+## 1. 🚨 문제 상황 (Issue)
+1. **지도 컴포넌트 로드 실패**: 웹 푸터(Footer) 영역의 "오시는 길"에 카카오 지도가 렌더링되지 않고 빈 회색 박스만 표시됨.
+2. **원인 규명 불능**: 기존 카카오 지도 스크립트 에러 발생 시 별도 예외 처리가 없어 에러 상황 파악 및 사용자 안내가 미흡함.
+3. **좌표 부정확**: 본사 주소(인천 원인재로 88)의 위경도 좌표가 실제 주소 위치와 약 1.3km 떨어져 있는 부정확한 값으로 하드코딩되어 있음.
+
+---
+
+## 2. 🔍 원인 분석 (Root Cause)
+1. **지도/로컬 서비스 비활성화**: 기존 우측의 카카오 비즈 앱 `jgh_shoppy` (JavaScript Key: `0ba0f360afff8e3de6f9a16e4c6e4100`)는 Kakao Developers 콘솔에서 **[지도/로컬]** 서비스 활성화 상태가 `OFF`로 비활성화되어 있었습니다. 이로 인해 카카오 지도 SDK 스크립트 요청 시 `401 Unauthorized` (NotAuthorizedError)가 반환되었습니다.
+2. **브라우저의 Script 로딩 특성**: 스크립트 로드 요청이 4xx 응답으로 실패하면 브라우저는 `onload`가 아닌 `onerror` 이벤트를 발생시킵니다. 기존 Next.js `<Script>` 컴포넌트는 `onLoad` 이벤트만 리슨하고 있어, 로딩 실패 시 아무런 피드백 없이 로딩 완료 처리가 되지 않고 무한 대기(회색 박스) 상태에 빠졌습니다.
+
+---
+
+## 3. 🛠️ 해결 조치 (Resolution)
+
+### ① 카카오 개발자 페이지 설정 및 앱 전환 🌟
+* **앱 전환**: 우측의 비즈 앱 `jgh_shoppy` 대신, 기존 비즈 앱의 테스트 버전인 좌측의 **`jgh_shoppy-TEST`** 앱을 활용하여 새로운 **JavaScript 키(`b96c6141d2f29d0372af24cf6d7c15c2`)**를 정상 발급받았습니다.
+* **플랫폼 도메인 등록**: 신규 키의 웹 플랫폼 도메인 설정에 아래 주소들을 등록하여 CORS 및 도메인 바인딩 제한을 해결하였습니다.
+  - `https://bacon-whacking-lego.ngrok-free.dev` (테스트용 ngrok 도메인)
+  - `http://localhost:3000` (로컬 프론트엔드 포트)
+  - `http://localhost:4000` (도커 호스트 포트)
+
+### ② 코드 고도화 및 안전망 구축 (onError 핸들링)
+* **수정 파일**: [KakaoMap.tsx](file:///c:/260512jgh_shoppingmall/shoppingmall/frontend/components/map/KakaoMap.tsx)
+* **내용**: 
+  - Next.js의 `next/script` 컴포넌트의 `strategy="afterInteractive"`, `autoload=false` 설정을 활용하여 비동기식 Kakao Map SDK 로드 주기를 제어.
+  - `<Script>` 컴포넌트에 **`onError` 핸들러(`handleScriptError`)**를 추가 구현하여, 지도 서비스 비활성화 등으로 SDK가 정상 로드되지 않을 시 회색 화면 대신 **직관적인 안내 경고 UI**가 노출되도록 개선.
+
+### ③ 카카오 API 연동 고정밀 좌표(원인재로 88) 보정
+* **수정 파일**: [KakaoMap.tsx](file:///c:/260512jgh_shoppingmall/shoppingmall/frontend/components/map/KakaoMap.tsx)
+* **내용**: 
+  - 신규 카카오 로컬 API를 조회하여 '인천광역시 연수구 원인재로 88 (동춘동, 대우삼환아파트)'의 **정밀한 국토교통부 표준 좌표**인 **위도 `37.406486`**, **경도 `126.678294`**를 구했습니다.
+  - 지도 컴포넌트 내에 위 좌표 값을 하드코딩 반영하여 마커가 본사 위치에 한 치의 오차 없이 정확히 배치되도록 수정했습니다.
+
+### ④ 프로덕션 도커 빌드 및 재기동
+* **명령어**: `docker-compose build frontend` ➔ `docker-compose up -d frontend`
+* **내용**: 프론트엔드 standalone 빌드 환경의 환경변수(`.env`)에 신규 JavaScript 키 값을 갱신하여 도커 재빌드 후 무중단 재구동 기동 성공.
+
+---
+
+## 4. 🚀 결과 및 검증
+* 웹 브라우저 새로고침(F5) 시 **인천 연수구 동춘동 원인재로 88 본사 위치**로 지도 줌 레벨 조정, 마커 렌더링, "ShopMall 본사" 안내창 말풍선이 오차 없이 완벽하고 아름답게 로드되는 것을 확인하였습니다.
+
+---
+
+## 5. 🔗 작업 결과 (Git Commit)
+
+- **커밋 해시**: `4bc7e9f`
+- **브랜치**: `main` ➔ `origin/main` Push 완료 ✅
+- **변경 파일 수**: 3개 (프론트엔드 3)
+
+```
+feat: 카카오 지도 컴포넌트(KakaoMap) 오류 수정 및 고밀도 좌표 설정
+```
