@@ -54,6 +54,17 @@ public class Address {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    public void update(String alias, String receiverName, String receiverPhone,
+                       String zipCode, String address, String addressDetail, boolean isDefault) {
+        this.alias = alias;
+        this.receiverName = receiverName;
+        this.receiverPhone = receiverPhone;
+        this.zipCode = zipCode;
+        this.address = address;
+        this.addressDetail = addressDetail;
+        this.isDefault = isDefault;
+    }
+
     public void setDefault(boolean isDefault) {
         this.isDefault = isDefault;
     }

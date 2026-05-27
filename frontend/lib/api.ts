@@ -158,3 +158,27 @@ export const adminApi = {
   unblockIp: (id: number) => api.delete(`/api/admin/blocked-ips/${id}`),
   getSalesStats: () => api.get('/api/admin/sales-stats'),
 };
+
+export const addressApi = {
+  getAddresses: () => api.get('/api/addresses'),
+  addAddress: (data: {
+    alias: string;
+    receiverName: string;
+    receiverPhone: string;
+    zipCode: string;
+    address: string;
+    addressDetail?: string;
+    isDefault: boolean;
+  }) => api.post('/api/addresses', data),
+  updateAddress: (id: number, data: {
+    alias: string;
+    receiverName: string;
+    receiverPhone: string;
+    zipCode: string;
+    address: string;
+    addressDetail?: string;
+    isDefault: boolean;
+  }) => api.put(`/api/addresses/${id}`, data),
+  deleteAddress: (id: number) => api.delete(`/api/addresses/${id}`),
+  setDefaultAddress: (id: number) => api.patch(`/api/addresses/${id}/default`),
+};

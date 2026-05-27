@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import { orderApi, paymentApi, cartApi } from '@/lib/api';
+import { orderApi, paymentApi, cartApi, addressApi } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import Script from 'next/script';
+import { MapPin, ChevronDown } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -81,6 +82,7 @@ export default function CheckoutPage() {
   const { user } = useAuthStore();
   const { items, totalPrice, clearCart } = useCartStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showAddressBook, setShowAddressBook] = useState(false);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
@@ -89,6 +91,28 @@ export default function CheckoutPage() {
       receiverPhone: user?.phone || '',
     },
   });
+
+  const { data: addressData } = useQuery({
+    queryKey: ['addresses'],
+    queryFn: () => addressApi.getAddresses(),
+    enabled: !!user,
+  });
+
+  const addresses = addressData?.data?.data ?? [];
+
+  // 기본 배송지 자동 완성
+  useEffect(() => {
+    if (addresses.length > 0) {
+      const defaultAddr = addresses.find((addr: any) => addr.isDefault);
+      if (defaultAddr) {
+        setValue('receiverName', defaultAddr.receiverName, { shouldValidate: true });
+        setValue('receiverPhone', defaultAddr.receiverPhone, { shouldValidate: true });
+        setValue('zipCode', defaultAddr.zipCode, { shouldValidate: true });
+        setValue('address', defaultAddr.address, { shouldValidate: true });
+        setValue('addressDetail', defaultAddr.addressDetail || '', { shouldValidate: true });
+      }
+    }
+  }, [addresses, setValue]);
 
   const handleAddressSearch = () => {
     if (typeof window !== 'undefined' && window.daum) {
@@ -222,7 +246,80 @@ export default function CheckoutPage() {
           {/* 배송지 정보 */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">배송지 정보</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">배송지 정보</h2>
+                {addresses.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/${locale}/mypage/addresses`)}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline transition"
+                  >
+                    + 배송지 추가/관리
+                  </button>
+                )}
+              </div>
+
+              {addresses.length > 0 && (
+                <div className="mb-6 border border-indigo-100 rounded-xl bg-indigo-50/50 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600">
+                        <MapPin size={14} />
+                      </span>
+                      <span className="text-sm font-bold text-gray-800">등록된 배송지 목록 ({addresses.length}개)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddressBook(!showAddressBook)}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 transition"
+                    >
+                      {showAddressBook ? '접기' : '선택하기'}
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${showAddressBook ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+
+                  {showAddressBook && (
+                    <div className="mt-3 space-y-2 border-t border-indigo-100/50 pt-3 max-h-60 overflow-y-auto pr-1">
+                      {addresses.map((addr: any) => (
+                        <div
+                          key={addr.id}
+                          onClick={() => {
+                            setValue('receiverName', addr.receiverName, { shouldValidate: true });
+                            setValue('receiverPhone', addr.receiverPhone, { shouldValidate: true });
+                            setValue('zipCode', addr.zipCode, { shouldValidate: true });
+                            setValue('address', addr.address, { shouldValidate: true });
+                            setValue('addressDetail', addr.addressDetail || '', { shouldValidate: true });
+                            setShowAddressBook(false);
+                            toast.success(`'${addr.alias}' 배송지가 선택되었습니다.`);
+                          }}
+                          className="p-3 bg-white hover:bg-indigo-50 border border-gray-100 hover:border-indigo-200 rounded-xl cursor-pointer transition flex items-start justify-between gap-3 group"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                {addr.alias}
+                              </span>
+                              {addr.isDefault && (
+                                <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                  ★ 기본
+                                </span>
+                              )}
+                              <span className="text-xs font-semibold text-gray-700">{addr.receiverName} ({addr.receiverPhone})</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 truncate">
+                              [{addr.zipCode}] {addr.address} {addr.addressDetail || ''}
+                            </p>
+                          </div>
+                          <span className="shrink-0 text-xs font-bold text-gray-400 group-hover:text-indigo-600 transition self-center">
+                            선택
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">수령인 이름 *</label>
