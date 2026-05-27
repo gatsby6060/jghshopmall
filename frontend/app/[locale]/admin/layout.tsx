@@ -13,6 +13,7 @@ import {
   Tag,
   LogOut,
   Home,
+  ShieldAlert,
 } from 'lucide-react';
 
 const navItems = [
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/admin/categories', label: '카테고리 관리', icon: Tag },
   { href: '/admin/orders', label: '주문 관리', icon: ShoppingCart },
   { href: '/admin/users', label: '회원 관리', icon: Users },
+  { href: '/admin/ips', label: 'IP 모니터링', icon: ShieldAlert },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,6 +1,8 @@
 package com.shoppingmall.backend.domain.admin.controller;
 
 import com.shoppingmall.backend.domain.admin.dto.DashboardResponse;
+import com.shoppingmall.backend.domain.admin.entity.AccessLog;
+import com.shoppingmall.backend.domain.admin.entity.BlockedIp;
 import com.shoppingmall.backend.domain.admin.service.AdminService;
 import com.shoppingmall.backend.domain.order.dto.OrderResponse;
 import com.shoppingmall.backend.domain.order.entity.Order;
@@ -13,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -49,5 +52,32 @@ public class AdminController {
             @PathVariable Long id, @RequestParam String status) {
         adminService.updateOrderStatus(id, Order.OrderStatus.valueOf(status));
         return ResponseEntity.ok(ApiResponse.ok("주문 상태가 변경되었습니다."));
+    }
+
+    // 접속 IP 모니터링 로그 조회
+    @GetMapping("/access-logs")
+    public ResponseEntity<ApiResponse<Page<AccessLog>>> getAccessLogs(@PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(adminService.getAccessLogs(pageable)));
+    }
+
+    // 차단된 IP 리스트 조회
+    @GetMapping("/blocked-ips")
+    public ResponseEntity<ApiResponse<List<BlockedIp>>> getBlockedIps() {
+        return ResponseEntity.ok(ApiResponse.ok(adminService.getBlockedIps()));
+    }
+
+    // 특정 IP 차단 추가
+    @PostMapping("/blocked-ips")
+    public ResponseEntity<ApiResponse<Void>> blockIp(
+            @RequestParam String ipAddress, @RequestParam(required = false, defaultValue = "") String reason) {
+        adminService.blockIp(ipAddress, reason);
+        return ResponseEntity.ok(ApiResponse.ok("해당 IP가 접속 차단되었습니다."));
+    }
+
+    // 차단 해제
+    @DeleteMapping("/blocked-ips/{id}")
+    public ResponseEntity<ApiResponse<Void>> unblockIp(@PathVariable Long id) {
+        adminService.unblockIp(id);
+        return ResponseEntity.ok(ApiResponse.ok("접속 차단이 해제되었습니다."));
     }
 }

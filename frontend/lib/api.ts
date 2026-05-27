@@ -150,4 +150,10 @@ export const adminApi = {
     api.get('/api/admin/orders', { params }),
   updateOrderStatus: (id: number, status: string) =>
     api.patch(`/api/admin/orders/${id}/status`, null, { params: { status } }),
+  getAccessLogs: (params?: { page?: number; size?: number }) =>
+    api.get('/api/admin/access-logs', { params }),
+  getBlockedIps: () => api.get('/api/admin/blocked-ips'),
+  blockIp: (ipAddress: string, reason?: string) =>
+    api.post('/api/admin/blocked-ips', null, { params: { ipAddress, reason: reason || '' } }),
+  unblockIp: (id: number) => api.delete(`/api/admin/blocked-ips/${id}`),
 };
