@@ -38,11 +38,6 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale}>
       <head>
-        <script
-          type="text/javascript"
-          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&libraries=services`}
-          async
-        />
         {/* 포트원 결제 SDK 추가 */}
         <script src="https://cdn.iamport.kr/v1/iamport.js" async />
       </head>

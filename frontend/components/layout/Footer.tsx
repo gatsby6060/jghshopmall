@@ -32,32 +32,32 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">{t('customerService')}</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="hover:text-white">
+                <Link href="/about" className="hover:text-white" prefetch={false}>
                   {t('links.about')}
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-white">
+                <Link href="/faq" className="hover:text-white" prefetch={false}>
                   {t('links.faq')}
                 </Link>
               </li>
               <li>
-                <Link href="/notice" className="hover:text-white">
+                <Link href="/notice" className="hover:text-white" prefetch={false}>
                   {t('links.notice')}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white">
+                <Link href="/contact" className="hover:text-white" prefetch={false}>
                   {t('links.contact')}
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="hover:text-white">
+                <Link href="/returns" className="hover:text-white" prefetch={false}>
                   {t('links.returns')}
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="hover:text-white">
+                <Link href="/shipping" className="hover:text-white" prefetch={false}>
                   {t('links.shipping')}
                 </Link>
               </li>
@@ -69,12 +69,12 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">{t('guide')}</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/terms" className="hover:text-white">
+                <Link href="/terms" className="hover:text-white" prefetch={false}>
                   {t('guideLinks.terms')}
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white">
+                <Link href="/privacy" className="hover:text-white" prefetch={false}>
                   {t('guideLinks.privacy')}
                 </Link>
               </li>
@@ -84,7 +84,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/orders" className="hover:text-white">
+                <Link href="/orders" className="hover:text-white" prefetch={false}>
                   {t('guideLinks.orders')}
                 </Link>
               </li>
