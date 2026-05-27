@@ -25,6 +25,7 @@ interface AccessLog {
   userAgent: string;
   timestamp: string;
   country: string;
+  port?: number;
 }
 
 interface BlockedIp {
@@ -44,6 +45,19 @@ export default function AdminIpMonitoringPage() {
   const [manualIp, setManualIp] = useState('');
   const [manualReason, setManualReason] = useState('');
   const [showBlockModal, setShowBlockModal] = useState(false);
+
+  // User-Agent 상세 보기 확장 상태
+  const [expandedLogs, setExpandedLogs] = useState<Record<number, boolean>>({});
+
+  const toggleLogUserAgent = (id: number) => {
+    setExpandedLogs(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleCopyText = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('User-Agent가 클립보드에 복사되었습니다.');
+  };
+
 
   // 1. 접속 로그 조회
   const { data: logsData, isLoading: logsLoading } = useQuery({
@@ -277,15 +291,62 @@ export default function AdminIpMonitoringPage() {
                     return (
                       <tr key={log.id} className="hover:bg-gray-50/50 transition">
                         <td className="px-6 py-4 whitespace-nowrap">{renderCountryBadge(log.country)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{log.ipAddress}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                          <span>{log.ipAddress}</span>
+                          {log.port && (
+                            <span className="text-gray-400 font-mono text-xs ml-1">
+                              :{log.port}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className={`px-2 py-0.5 text-xs font-bold rounded mr-2 ${
                             log.method === 'GET' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'
                           }`}>{log.method}</span>
                           <span className="text-gray-600 font-mono text-xs">{log.uri}</span>
                         </td>
-                        <td className="px-6 py-4 text-xs text-gray-500 max-w-xs truncate" title={log.userAgent}>
-                          {log.userAgent || '-'}
+                        <td className="px-6 py-4 text-xs text-gray-500 max-w-xs">
+                          {log.userAgent ? (
+                            <div className="flex flex-col gap-1">
+                              {expandedLogs[log.id] ? (
+                                <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 shadow-inner whitespace-normal break-all font-mono text-gray-700 relative group max-w-md select-text">
+                                  <span>{log.userAgent}</span>
+                                  <div className="flex gap-2 mt-2 justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopyText(log.userAgent);
+                                      }}
+                                      className="px-2 py-1 bg-white border border-gray-200 hover:border-indigo-300 hover:text-indigo-600 rounded-md text-[10px] text-gray-500 font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
+                                    >
+                                      복사
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleLogUserAgent(log.id);
+                                      }}
+                                      className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-md text-[10px] text-indigo-600 font-bold transition flex items-center gap-1 cursor-pointer"
+                                    >
+                                      접기
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div 
+                                  onClick={() => toggleLogUserAgent(log.id)}
+                                  className="truncate cursor-pointer hover:text-indigo-600 hover:underline transition max-w-xs text-left"
+                                  title="클릭하여 전체 보기"
+                                >
+                                  {log.userAgent}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            '-'
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 font-medium">
                           {dayjs(log.timestamp + 'Z').format('YYYY-MM-DD HH:mm:ss')}

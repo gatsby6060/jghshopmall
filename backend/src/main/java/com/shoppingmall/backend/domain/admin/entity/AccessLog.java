@@ -35,6 +35,9 @@ public class AccessLog {
     @Column(length = 50)
     private String country;
 
+    @Column(nullable = true)
+    private Integer port;
+
     public AccessLog(String ipAddress, String uri, String method, String userAgent, LocalDateTime timestamp, String country) {
         this.ipAddress = ipAddress;
         this.uri = uri;
@@ -42,5 +45,15 @@ public class AccessLog {
         this.userAgent = userAgent;
         this.timestamp = timestamp;
         this.country = country;
+    }
+
+    public AccessLog(String ipAddress, String uri, String method, String userAgent, LocalDateTime timestamp, String country, Integer port) {
+        this.ipAddress = ipAddress;
+        this.uri = uri;
+        this.method = method;
+        this.userAgent = userAgent;
+        this.timestamp = timestamp;
+        this.country = country;
+        this.port = port;
     }
 }

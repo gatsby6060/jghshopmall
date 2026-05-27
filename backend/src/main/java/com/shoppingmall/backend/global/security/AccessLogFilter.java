@@ -53,7 +53,14 @@ public class AccessLogFilter extends OncePerRequestFilter {
         String country = resolveCountrySimple(ipAddress);
 
         try {
-            AccessLog accessLog = new AccessLog(ipAddress, uri, method, userAgent, LocalDateTime.now(), country);
+            int port = request.getRemotePort();
+            String realPortHeader = request.getHeader("X-Real-Port");
+            if (realPortHeader != null && !realPortHeader.isEmpty()) {
+                try {
+                    port = Integer.parseInt(realPortHeader);
+                } catch (NumberFormatException ignored) {}
+            }
+            AccessLog accessLog = new AccessLog(ipAddress, uri, method, userAgent, LocalDateTime.now(), country, port);
             accessLogRepository.save(accessLog);
         } catch (Exception e) {
             log.error("Failed to save access log", e);
