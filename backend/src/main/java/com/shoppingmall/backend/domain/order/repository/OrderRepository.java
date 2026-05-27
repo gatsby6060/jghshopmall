@@ -17,4 +17,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o JOIN FETCH o.orderItems oi JOIN FETCH oi.product WHERE o.id = :id")
     Optional<Order> findByIdWithItems(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderItems oi LEFT JOIN FETCH oi.product " +
+           "WHERE o.status NOT IN (com.shoppingmall.backend.domain.order.entity.Order.OrderStatus.PENDING, com.shoppingmall.backend.domain.order.entity.Order.OrderStatus.CANCELLED) " +
+           "AND o.createdAt >= :startDate")
+    java.util.List<Order> findPaidOrdersAfter(@Param("startDate") java.time.LocalDateTime startDate);
 }

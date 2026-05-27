@@ -1,6 +1,7 @@
 package com.shoppingmall.backend.domain.admin.controller;
 
 import com.shoppingmall.backend.domain.admin.dto.DashboardResponse;
+import com.shoppingmall.backend.domain.admin.dto.SalesStatsResponse;
 import com.shoppingmall.backend.domain.admin.entity.AccessLog;
 import com.shoppingmall.backend.domain.admin.entity.BlockedIp;
 import com.shoppingmall.backend.domain.admin.service.AdminService;
@@ -79,5 +80,11 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Void>> unblockIp(@PathVariable Long id) {
         adminService.unblockIp(id);
         return ResponseEntity.ok(ApiResponse.ok("접속 차단이 해제되었습니다."));
+    }
+
+    // 매출 및 인기 상품 통계 데이터 조회
+    @GetMapping("/sales-stats")
+    public ResponseEntity<ApiResponse<SalesStatsResponse>> getSalesStats() {
+        return ResponseEntity.ok(ApiResponse.ok(adminService.getSalesStats()));
     }
 }

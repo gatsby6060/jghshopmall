@@ -156,4 +156,5 @@ export const adminApi = {
   blockIp: (ipAddress: string, reason?: string) =>
     api.post('/api/admin/blocked-ips', null, { params: { ipAddress, reason: reason || '' } }),
   unblockIp: (id: number) => api.delete(`/api/admin/blocked-ips/${id}`),
+  getSalesStats: () => api.get('/api/admin/sales-stats'),
 };
