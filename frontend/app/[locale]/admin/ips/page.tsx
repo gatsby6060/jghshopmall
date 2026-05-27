@@ -287,8 +287,8 @@ export default function AdminIpMonitoringPage() {
                         <td className="px-6 py-4 text-xs text-gray-500 max-w-xs truncate" title={log.userAgent}>
                           {log.userAgent || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                          {dayjs(log.timestamp).format('YYYY-MM-DD HH:mm:ss')}
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 font-medium">
+                          {dayjs(log.timestamp + 'Z').format('YYYY-MM-DD HH:mm:ss')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                           {isIpBlocked ? (
@@ -343,8 +343,8 @@ export default function AdminIpMonitoringPage() {
                         {item.ipAddress}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">{item.reason || '관리자 강제 차단'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                        {dayjs(item.blockedAt).format('YYYY-MM-DD HH:mm:ss')}
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 font-medium">
+                        {dayjs(item.blockedAt + 'Z').format('YYYY-MM-DD HH:mm:ss')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                         <button
