@@ -526,7 +526,55 @@ docker exec -it shoppingmall-db mysql -u root -p
 USE shoppingmall;
 SELECT * FROM payment_event_logs ORDER BY received_at DESC;
 ```
-> 💡 **로그 vs MariaDB 차이**: Docker 로그는 컨테이너 재시작 시 사라질 수 있지만, MariaDB 테이블 데이터는 Docker 볼륨에 **영구 보존**됩니다.
+
+---
+
+### ⭐ 방법 3: Kafka Console Consumer — Kafka 브로커 토픽 메시지 직접 확인 (가장 정확한 방법)
+
+> Docker 로그나 MariaDB와 달리, **Kafka 브로커 내부 토픽에 실제로 메시지가 쌓였는지** 원본 그대로 확인할 수 있는 가장 신뢰도 높은 방법입니다.
+
+```bash
+docker exec -it shoppingmall-kafka /opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic payment-events \
+  --from-beginning
+```
+
+실행 시 토픽에 쌓인 실제 JSON 메시지가 출력됩니다:
+```json
+{"orderId":"LOAD-TEST-ORD-177994286C0209-1","amount":26218,"email":"load-user-1@example.com"}
+{"orderId":"LOAD-TEST-ORD-177994286C0353-3","amount":1351,"email":"load-user-3@example.com"}
+{"orderId":"LOAD-TEST-ORD-177994286C0421-5","amount":35052,"email":"load-user-5@example.com"}
+{"orderId":"LOAD-TEST-ORD-177994286C0489-7","amount":99605,"email":"load-user-7@example.com"}
+... (이하 생략)
+```
+
+### 📊 3가지 확인 방법 비교표
+
+| 방법 | 무엇을 보여주나 | 데이터 유지 | 정확도 |
+|------|----------------|------------|--------|
+| 방법1: `docker logs` | Producer/Consumer 실행 로그 | ❌ 컨테이너 재시작 시 사라짐 | 보통 |
+| 방법2: MariaDB SELECT | Consumer가 처리 완료 후 DB 저장 데이터 | ✅ 볼륨에 영구 보존 | 높음 |
+| **방법3: kafka-console-consumer ⭐** | **Kafka 브로커 토픽에 실제 쌓인 원본 메시지** | **✅ Kafka 보존 정책 기간 유지** | **★ 가장 높음** |
+
+> 💡 **추천 확인 순서**: 방법3(Kafka 브로커 직접) → 방법2(MariaDB) → 방법1(로그) 순으로 확인하면 파이프라인 전체를 가장 신뢰도 높게 검증할 수 있습니다.
+> - 방법3에서 메시지가 보이면 → **Producer 정상**
+> - 방법2에서 DB에 저장되었으면 → **Consumer까지 정상**
+
+### 기타 유용한 Kafka CLI 명령어
+```bash
+# 토픽 목록 확인
+docker exec -it shoppingmall-kafka /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 --list
+
+# 토픽 상세 정보 (파티션, 오프셋 등)
+docker exec -it shoppingmall-kafka /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 --describe --topic payment-events
+
+# Consumer Group 상태 확인 (지연 여부)
+docker exec -it shoppingmall-kafka /opt/kafka/bin/kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 --describe --group shoppingmall-group
+```
 
 ---
 
