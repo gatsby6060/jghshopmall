@@ -657,19 +657,19 @@ sequenceDiagram
     autonumber
     actor User as 사용자 (Browser)
     participant Back as 백엔드 서버 (Spring Boot)
-    participant DB as MariaDB (데이터베이스)
     participant Kafka as 3대 카프카 큐 (완충 버퍼)
+    participant DB as MariaDB (데이터베이스)
 
-    Note over User, DB: [4번 노선 🚄] 동기식 초고속 직접 저장 (카프카 개입 0%)
+    Note over User, Back: [4번 노선 🚄] 동기식 초고속 직접 저장 (카프카 개입 0%)
     User->>Back: 결제 완료 클릭
     Back->>DB: [직통 직행] orders, payments 테이블 즉시 저장
     DB-->>Back: 저장 완료 응답 (0.001초)
     Back-->>User: [완료 화면 이동] 주문정보 즉시 CRUD 조회 노출! (0.001초)
 
-    Note over Back, Kafka: [9번 노선 🚚] 비동기식 카프카 환승 저장 (유량 제어)
-    Back-->>Kafka: [5번 📤 발행] payment-events 토픽에 후속 로그 적송
+    Note over Back, DB: [9번 노선 🚚] 비동기식 카프카 환승 저장 (유량 제어)
+    Back->>Kafka: [5번 📤 발행] payment-events 토픽에 후속 로그 적송
     Note over Kafka: 3중 복제 및 대기 (부하 분산 & Throttling)
-    Kafka-->>Back: [8번 📥 수신] PaymentEventConsumer 실시간 리슨
+    Kafka->>Back: [8번 📥 수신] PaymentEventConsumer 실시간 리슨
     Back->>DB: [9번 💾 적재] payment_event_logs 테이블 로그 누적
 ```
 
