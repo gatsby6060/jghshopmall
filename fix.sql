@@ -1,0 +1,1 @@
+UPDATE users SET password='$2a$10$bwuGTc8yZ5ONKHQ2n6lYZOApOwXJFUC5Qwu7cuSJcQWkHBePr9Fjq' WHERE email='test@shopmall.com'; UPDATE users SET password='$2a$10$0KMdIF1dUPZvOkfsZneZbuqYGsvKG3ukSFAOwx4nYTfGDva0JrwSy' WHERE email='admin@shopmall.com';

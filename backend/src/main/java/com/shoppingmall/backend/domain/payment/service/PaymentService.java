@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import com.shoppingmall.backend.global.event.PaymentEventProducer;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -30,6 +31,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
+    private final PaymentEventProducer paymentEventProducer;
 
     @Value("${portone.api-key:your_portone_api_key}")
     private String portoneApiKey;
@@ -137,6 +139,14 @@ public class PaymentService {
 
         payment.confirm(request.paymentKey(), rawResponse);
         order.updateStatus(Order.OrderStatus.PAYMENT_DONE);
+
+        // [Kafka] 결제 완료 비동기 이벤트 발행 (오류가 발생하더라도 실제 결제 프로세스에는 지장을 주지 않도록 방어 설계)
+        try {
+            String email = order.getUser() != null ? order.getUser().getEmail() : "anonymous@example.com";
+            paymentEventProducer.sendPaymentEvent(order.getOrderNumber(), order.getFinalAmount().longValue(), email);
+        } catch (Exception e) {
+            log.error(" [Kafka Event ❌] 결제 이벤트 발행 중 일시적 오류 발생 (사용자 결제 처리는 정상 진행 유지): ", e);
+        }
 
         return PaymentResponse.from(paymentRepository.save(payment));
     }
