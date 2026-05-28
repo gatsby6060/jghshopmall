@@ -61,7 +61,7 @@ spring:
             user-info-uri: https://appleid.apple.com/auth/userinfo
             user-name-attribute: sub
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092,localhost:9093,localhost:9094}
     consumer:
       group-id: shoppingmall-group
       auto-offset-reset: earliest
