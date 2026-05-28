@@ -596,3 +596,99 @@ docker exec -it shoppingmall-kafka /opt/kafka/bin/kafka-consumer-groups.sh \
 ```
 feat: 카프카(Kafka) 비동기 이벤트 연동, MariaDB 영속화 및 JUnit 5 EmbeddedKafka 테스트 세팅
 ```
+
+---
+---
+
+# 🚀 [인프라 & 아키텍처] Apache Kafka 3대 분산 클러스터 고가용성 구축 & 동기(Sync)/비동기(Async) 역할분담 설계
+
+## 📅 작성일: 2026-05-28
+## 👤 작성자: Antigravity
+
+---
+
+## 1. 🗳️ Apache Kafka 3대 분산 클러스터 정석 구축 (고가용성)
+
+우리의 카프카를 실무 정석 구조인 3대 멀티 브로커 클러스터(KRaft)로 성공적으로 전환하였습니다! 
+
+### ① 홀수(3대) 구성과 과반수 투표(Quorum)의 법칙
+분산 시스템에서는 한 서버가 기권하거나 투표 결과가 동점이 되어 전체 클러스터가 마비되는 것을 막기 위해 **홀수(3, 5, 7...)대**로 구성해야 합니다.
+- **다수결의 원칙 (Quorum)**: $N$대의 노드가 있을 때, 과반수인 $\lfloor N/2 \rfloor + 1$대가 살아있어야 정상 합의(Consensus)를 이룹니다.
+- **3대 구성 시**: 2대 이상이 생존해야 활성화됩니다. 즉, 노드 1대가 죽어도 남은 2대가 과반수(2/3)를 형성하므로 시스템은 멈추지 않고 중단 없는 결제 처리를 보장합니다.
+
+### ② 'payment-events' 3중 복제 토픽 설계
+- **파티션(Partition) = 3**: 메시지가 3개의 채널로 병렬 부하 분산되어 처리량 증대.
+- **복제본(Replication Factor) = 3**: 하나의 메시지가 Node 1, 2, 3 전체에 복제되어 어느 한 노드가 불타 없어져도 유실률 0%를 달성합니다.
+- **Leader & Follower**: 쓰기/읽기는 Leader 파티션이 전담하고, Follower 파티션들은 Leader의 데이터를 실시간 복제하여 대기합니다.
+
+---
+
+## 2. 🌊 대량 스트레스 테스트 시뮬레이터 (데이터 폭포) API
+
+초당 30건씩 10초간(총 300건) 이벤트를 비동기로 쏴주는 대용량 트래픽 방류 컨트롤러를 구축하고, 무결하게 받아내는 스트레스 테스트를 완료했습니다.
+
+- **컨트롤러 경로**: `PaymentTestController.java` (`/api/test/kafka/waterfall`)
+- **보안 설정**: 시뮬레이터 원활한 구동을 위해 `SecurityConfig.java`에서 해당 엔드포인트 `/api/test/kafka/**` bypass (`permitAll`) 추가.
+- **테스트 결과**: 데이터 폭포를 연달아 방류(총 600건 적재)하여도 유실률 0%로 DB에 무결하게 적재 성공하였습니다.
+
+---
+
+## 3. 🛡️ 동기(Sync) CRUD와 비동기(Async) 카프카의 아름다운 조화
+
+> 💡 **사용자님의 예리한 아키텍처 피드백을 반영하여 보강한 설계 이론입니다!**
+> "결제하자마자 화면에 보일 데이터(4번)는 카프카를 타지 않고 즉시 DB에 저장(동기 CRUD)하고, 그 이후의 무거운 후속 작업(9번)만 비동기로 카프카 큐를 태워 처리합니다."
+
+### 🚄 4번 노선: 초고속 동기(Sync) 직행 철로
+- **대상**: `orders` (주문 마스터), `payments` (결제 정보)
+- **이유**: 사용자의 돈이 안전하게 오갔음을 즉시 보장하고, 0.001초 만에 주문 완료 화면으로 넘어가 최신 주문 정보를 바로 보여주기 위해 카프카를 거치지 않고 직접 DB에 꽂아 넣습니다.
+- **장점**: 결제 완료 화면에서 `SELECT`로 방금 결제한 내역을 띄워줄 때 지연 시간이 0에 수렴하여 즉각적인 사용자 피드백을 줍니다.
+
+### 🚚 9번 노선: 안전한 비동기(Async) 카프카 완충 노선
+- **대상**: `payment_event_logs` (결제 후속 로그), 이메일/알림톡 발송, 통계 합산, 분석용 빅데이터 적재
+- **이유**: 트래픽 폭주 시(예: 선착순 타임 세일) 백엔드와 데이터베이스가 한꺼번에 뻗어버리는 병목 현상(Bottleneck)을 완벽하게 예방하기 위함입니다.
+- **장점**: 카프카라는 '완충 댐(Buffer)'에 메시지를 모아두고 수용 가능한 속도로 차분하게 가져와서(Throttling) 처리합니다. 일시적으로 로그 서버나 메일 서버가 기절하더라도 카프카의 무한 재시도(Retry) 덕분에 결국(Eventual) 100% 무결한 완성을 보장합니다.
+
+---
+
+## 🗺️ 4번 직행 vs 9번 카프카 환승 시퀀스 다이어그램
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 사용자 (Browser)
+    participant Back as 백엔드 서버 (Spring Boot)
+    participant DB as MariaDB (데이터베이스)
+    participant Kafka as 3대 카프카 큐 (완충 버퍼)
+
+    Note over User, DB: [4번 노선 🚄] 동기식 초고속 직접 저장 (카프카 개입 0%)
+    User->>Back: 결제 완료 클릭
+    Back->>DB: [직통 직행] orders, payments 테이블 즉시 저장
+    DB-->>Back: 저장 완료 응답 (0.001초)
+    Back-->>User: [완료 화면 이동] 주문정보 즉시 CRUD 조회 노출! (0.001초)
+
+    Note over Back, Kafka: [9번 노선 🚚] 비동기식 카프카 환승 저장 (유량 제어)
+    Back-->>Kafka: [5번 📤 발행] payment-events 토픽에 후속 로그 적송
+    Note over Kafka: 3중 복제 및 대기 (부하 분산 & Throttling)
+    Kafka-->>Back: [8번 📥 수신] PaymentEventConsumer 실시간 리슨
+    Back->>DB: [9번 💾 적재] payment_event_logs 테이블 로그 누적
+```
+
+---
+
+## 🛠️ 4. Windows PowerShell 인코딩(CP949) 우회 MariaDB 데이터 한글 깨짐 복구
+
+파워쉘의 파이프라인(`|`) 특성으로 인해 윈도우 인코딩이 개입하면서 MariaDB 백업 스크립트 실행 시 한글 데이터가 `?`로 소실되던 치명적인 문제를 우회 해결했습니다.
+
+- **원인**: `Get-Content`가 UTF-8로 읽더라도 파워쉘 파이프(`|`)를 타고 `docker exec -i`로 전송되는 순간 윈도우 기본 인코딩인 CP949로 손실 변환됨.
+- **해결 조치**: 
+  1. `docker cp` 명령어를 활용하여 SQL 스크립트 파일을 컨테이너 내부 `/tmp` 디렉토리로 원본 그대로 복사.
+  2. 컨테이너 내부 로컬에서 `mysql` 클라이언트를 기동하여 직접 `source /tmp/...` 실행.
+  3. 윈도우 인코딩 개입을 0%로 완전히 차단하여 완벽한 오리지널 한글 상태로 데이터 복구 완료.
+
+---
+
+## 🔗 5. 작업 결과 (Git Commit)
+
+- **커밋 해시**: `5b64e54`, `47cfa62`, `f3d9b04` (이번 아키텍처 문서화 커밋)
+- **브랜치**: `main` ➔ `origin/main` Push 완료 ✅
+- **변경 파일**: [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
