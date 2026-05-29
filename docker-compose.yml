@@ -173,8 +173,41 @@ services:
     networks:
       - shoppingmall-net
 
+  # ===== Elasticsearch 7.17.21 =====
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.21
+    container_name: shoppingmall-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - shoppingmall-net
+
+  # ===== Kibana 7.17.21 =====
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.21
+    container_name: shoppingmall-kibana
+    user: "1000"
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - shoppingmall-net
+
 volumes:
   db_data:
+    driver: local
+  es_data:
     driver: local
 
 networks:

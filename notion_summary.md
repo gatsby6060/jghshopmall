@@ -692,3 +692,85 @@ sequenceDiagram
 - **커밋 해시**: `5b64e54`, `47cfa62`, `f3d9b04` (이번 아키텍처 문서화 커밋)
 - **브랜치**: `main` ➔ `origin/main` Push 완료 ✅
 - **변경 파일**: [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
+
+---
+---
+
+# 🚀 [인프라 & 빅데이터] ELK Stack 1단계: Elasticsearch & Kibana 7.17.21 Docker 기본 환경 구축 완료
+
+## 📅 작성일: 2026-05-29
+## 👤 작성자: Antigravity
+
+---
+
+## 1. 🏗️ ELK 기본 환경 구축 개요 (1단계 완성)
+
+쇼핑몰 시스템에 대용량 로그 수집 파이프라인 및 매출 시각화 대시보드를 이식하기 위한 기초 인프라로, **Elasticsearch**와 **Kibana**를 Docker Compose 환경 위에 무결하게 이식하고 상호 연결하는 데 성공했습니다!
+
+* **도커 내부 가상 네트워크(`shoppingmall-net`)**로 기존 데이터베이스(MariaDB), 백엔드(Spring Boot), 카프카 클러스터(3대)와 완벽히 묶여있어, 향후 별도의 IP 노출 없이 실시간 스트리밍 연동이 가능합니다.
+* **사용된 버전**: `7.17.21` (7.x LTS 계열 최종 완성판). 로컬 학습용으로 복잡한 보안 인증 설정 절차를 우회할 수 있어 가장 빠르고 직관적으로 성취감을 맛볼 수 있는 프리미엄 최적 버전입니다.
+
+---
+
+## 2. 🛠️ 트러블슈팅 일지 (Technical Challenges)
+
+이번 구축 작업 중 Windows 가상화 환경 및 Docker 데몬의 기괴한 버그들을 논리적 추론과 정교한 기동 방식을 통해 완벽하게 제압했습니다.
+
+### ① containerd 데몬 DB 파일 쓰기 에러 (`commit failed: input/output error`)
+* **현상**: 최초 기동 중 Docker 데몬이 메타데이터 파일 쓰기를 거부하며 굳어버림.
+* **원인**: Windows 환경에서 WSL2 가상 머신 디스크(`ext4.vhdx`)의 쓰기 지연 또는 충돌로 인한 메타데이터 DB 일시적 손상.
+* **해결**: 개발용 터미널에서 `wsl --shutdown` 명령을 실행하여 **WSL2 가상 머신 자체를 강제 재부팅(Recycle)** 시킴으로써 Docker Desktop이 손상된 메타데이터 영역을 자동으로 정리하고 깨끗하게 재시작하도록 조치했습니다.
+
+### ② UAC 권한 제약으로 인한 서비스 정지
+* **현상**: 가상 머신 종료 후 터미널 명령어만으로는 `com.docker.service` (Docker Desktop 서비스) 기동 시 `Access is denied (액세스 거부)` 에러 발생.
+* **원인**: Windows 시스템 서비스 제어는 관리자 권한이 필수이나, 개발 터미널은 샌드박스 보안 상태로 실행 중이었음.
+* **해결**: 사용자님께 로컬 화면에서 직접 Docker Desktop 앱을 실행하도록 요청하여 UAC 권한 동의를 자연스럽게 획득했고, 서비스 및 GUI 프로세스를 즉시 구동 완료했습니다.
+
+### ③ JVM 클래스 로딩 실패 에러 (`java.lang.ClassFormatError: Incompatible magic value 0`)
+* **현상**: 재기동 후 Elasticsearch가 `ClassFormatError`를 뿜으며 무한 Restarting 루프에 빠짐.
+* **원인**: 첫 번째 `commit failed` 에러 발생 당시 다운로드되던 이미지 레이어의 파일 일부가 디스크 충돌로 인해 **0바이트(비어있는 상태)로 찌그러진 채 로컬 Docker 캐시에 저장**되었음. 
+* **해결 (스마트한 버전 우회 전략)**:
+  1. 기존에 깨진 채 남아있던 `7.17.10` 이미지와 캐시를 `docker rmi`로 완벽히 삭제.
+  2. 로컬 캐시를 우회하기 위해 이미지를 7.x 계열 최종 릴리즈인 **`7.17.21`** 버전으로 상향 수정.
+  3. Docker가 이전의 오염된 캐시를 100% 버리고 **완벽히 깨끗하고 안전한 정품 이미지 레이어를 원격에서 새로 받아오도록** 강제하여 부팅에 성공했습니다.
+
+### ④ Kibana passwd 계정 조회 에러
+* **현상**: Kibana 컨테이너 기동 시 `unable to find user kibana: no matching entries in passwd file` 에러 발생.
+* **원인**: Windows 환경과 Linux 내부의 계정 구조 매핑 차이로 인해 `kibana`라는 문자열 유저 정보를 찾아내지 못함.
+* **해결**: `docker-compose.yml` 내 `kibana` 서비스 하단에 `user: "1000"` (UID 직접 매핑) 옵션을 부여하여 계정 DB 조회 우회 실행에 성공했습니다.
+
+---
+
+## 3. 🔍 기동 상태 및 검증 결과 (Verification)
+
+### ① 전체 서비스 running 상태 검증 (`docker ps`)
+모든 컨테이너가 단 하나의 에러나 Restarting 루프 없이 정상적으로 동작 중입니다.
+
+```powershell
+CONTAINER ID   IMAGE                                                   STATUS                      PORTS
+fd32a1bc955b   docker.elastic.co/kibana/kibana:7.17.21                 Up 12 seconds               0.0.0.0:5601->5601/tcp
+9514e9a555fe   docker.elastic.co/elasticsearch/elasticsearch:7.17.21   Up 12 seconds               0.0.0.0:9200->9200/tcp
+27aab5b12d24   shoppingmall-backend                                    Up 18 seconds (healthy)     0.0.0.0:8080->8080/tcp
+0c6d679c49f4   shoppingmall-frontend                                   Up About a minute           0.0.0.0:4000->3000/tcp
+```
+
+### ② Elasticsearch API 웰컴 응답 테스트 (`http://localhost:9200`)
+```powershell
+Invoke-RestMethod -Uri "http://localhost:9200"
+
+name         : 9514e9a555fe
+cluster_name : docker-cluster
+version      : @{number=7.17.21; build_flavor=default; ...}
+tagline      : You Know, for Search    <--- 확인 완료! 🎯
+```
+
+### ③ Kibana 웹 UI 최종 활성화 검증 (`docker logs`)
+Kibana의 구동 상태가 최종적으로 사용 가능한 상태(`Kibana is now available`)로 깔끔히 전환되었음을 확인했습니다.
+
+---
+
+## 🔗 4. 작업 결과 (Git Commit)
+
+* **변경 파일**: [docker-compose.yml](file:///c:/260512jgh_shoppingmall/shoppingmall/docker-compose.yml), [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
+* **형상 관리**: `main` 브랜치 커밋 및 GitHub 원격 저장소(`origin/main`) 푸시 완료!
+
