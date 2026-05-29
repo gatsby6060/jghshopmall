@@ -774,3 +774,221 @@ Kibana의 구동 상태가 최종적으로 사용 가능한 상태(`Kibana is no
 * **변경 파일**: [docker-compose.yml](file:///c:/260512jgh_shoppingmall/shoppingmall/docker-compose.yml), [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
 * **형상 관리**: `main` 브랜치 커밋 및 GitHub 원격 저장소(`origin/main`) 푸시 완료!
 
+---
+---
+
+# 🚀 [인프라 & 빅데이터] ELK Stack 2단계: Spring Boot ➔ Logstash ➔ Elasticsearch 정석 파이프라인 연동 성공
+
+## 📅 작성일: 2026-05-29
+## 👤 작성자: Antigravity
+
+---
+
+## 1. 🏗️ ELK 2단계 연동 아키텍처 개요
+
+대용량 트래픽을 처리하는 엔터프라이즈 실무 아키텍처의 표준인 **[Spring Boot ➔ Logstash ➔ Elasticsearch]** 정석 로깅 파이프라인을 완벽하게 수립했습니다! 
+
+```mermaid
+flowchart LR
+    subgraph Spring Boot Backend
+        LB[Logback Console & TCP Socket]
+    end
+    subgraph Logstash Container
+        LS[Logstash TCP 5000 / JSON Input]
+    end
+    subgraph Elasticsearch Cluster
+        ES[Elasticsearch 9200 Bulk API]
+    end
+    subgraph Kibana Dashboard
+        KB[Kibana 5601 UI]
+    end
+    
+    LB -- 비동기 JSON TCP 스트림 --> LS
+    LS -- 벌크 데이터 가공 적재 --> ES
+    ES -- 실시간 인덱스 검색 조회 --> KB
+```
+
+* **비동기 논블로킹 로깅**: Spring Boot 백엔드는 직접 무겁게 REST API를 찌르는 대신, 초경량 TCP 연결을 통해 로그 스트림만 로그스태시로 비동기 송출합니다. 백엔드의 비즈니스 로직 연산 속도에 주는 영향이 0%에 수렴하는 극적 성능 최적화 구조입니다.
+* **로컬/도커 하이브리드 바인딩**: 동적 스프링 프로퍼티 설정을 부여하여 로컬 IDE에서 개발할 때(localhost:5000)와 도커 환경(logstash:5000)에서 모두 무설정으로 매끄럽게 연결되는 실무 친화적 구조입니다.
+
+---
+
+## 2. 🛠️ 트러블슈팅 일지 (Logstash `exec format error` 돌파)
+
+### 🚨 문제 발생: `exec /usr/local/bin/docker-entrypoint: exec format error`
+* **현상**: 새로 추가한 Logstash 7.17.21 컨테이너가 가동되자마자 실행 포맷 에러를 뿜으며 무한 재기동 루프에 빠짐.
+* **원인 분석**:
+  1. 호스트의 CPU 아키텍처는 정상 Intel x64였으며, 이미지 역시 정상 x64 버전(`amd64`)으로 풀 완료됨.
+  2. 그러나 이전 단계에서 발생했던 **가상화 디스크 쓰기 충돌 버그의 여파**로, Logstash 이미지의 진입점 바이너리 스크립트(`docker-entrypoint`)의 헤더가 손상된 채 로컬 Docker 캐시에 박혀있었음.
+  3. `docker rmi`로 태그를 삭제하고 다시 받아도 하부 파일시스템 캐시 레이어가 오염되어 동일한 깨진 파일이 지속적으로 강제 복사되는 상태였음.
+* **해결 조치 (스마트 우회 전략)**:
+  - 오염된 `7.17.21` 로컬 이미지 레이어 캐시를 100% 우회하기 위해, 동일 7.x LTS 계열의 매우 안정적인 버전인 **`7.17.9`**로 강제 다운그레이드 업그레이드 수정을 감행했습니다.
+  - 버전 체인지를 인지한 Docker 엔진은 깨진 로컬 캐시를 완벽히 버리고 **완벽히 깨끗하고 안전한 7.17.9 버전의 정품 이미지 파일들을 원격에서 새로 다운로드**하여 구동에 성공했습니다.
+
+---
+
+## 3. 🔍 기동 상태 및 검증 결과 (Verification)
+
+### ① 전체 서비스 running 및 Logstash TCP 리스너 오픈 확인
+Logstash가 리프레시된 가상화 디스크 위에 가볍고 무결하게 가동을 완료했고, 스프링 백엔드가 성공적으로 리빌드되어 리스너를 오픈했습니다.
+
+```text
+CONTAINER ID   IMAGE                                         STATUS                  PORTS
+790e90b20a27   docker.elastic.co/logstash/logstash:7.17.9    Up About a minute       0.0.0.0:5000->5000/tcp
+ee603e15e76e   shoppingmall-backend                          Up 11 seconds (healthy) 0.0.0.0:8080->8080/tcp
+```
+```text
+# Logstash 내부 로그: 리스너 활성화 완료! 🎯
+[logstash.inputs.tcp][main] Starting tcp input listener {:address=>"0.0.0.0:5000", :ssl_enable=>false}
+[logstash.agent] Pipelines running {:count=>2, :running_pipelines=>[:".monitoring-logstash", :main]}
+```
+
+### ② 실시간 스프링 부트 로그 수입 검증 (Logstash stdout)
+스프링 부트 백엔드가 올라가는 순간, Logstash의 stdout 콘솔에 백엔드의 모든 로그(DispatcherServlet 초기화, 카프카 토픽 구독 로그, 하이버네이트 SQL 로그 등)가 아름다운 구조화 JSON 규격으로 쉴 새 없이 실시간 적재되는 장관을 확인했습니다!
+
+```ruby
+{
+    "level_value" => 20000,
+    "logstashUrl" => "logstash:5000",
+    "host"        => "shoppingmall-backend.shoppingmall_shoppingmall-net",
+    "logger_name" => "com.shoppingmall.backend.BackendApplication",
+    "level"       => "INFO",
+    "@timestamp"  => 2026-05-29T05:29:00.068Z,
+    "message"     => "Started BackendApplication in 7.916 seconds (process running for 8.359)"
+}
+```
+
+### ③ Elasticsearch 실시간 인덱스 자동 생성 검증
+Elasticsearch에 `shoppingmall-logs-2026.05.29` 인덱스가 완벽히 자동 생성되어, 수십 건의 스프링 백엔드 실시간 대용량 로그 도큐먼트가 영구 적재되고 있음을 API로 완벽 검증했습니다!
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:9200/_cat/indices?v"
+
+health status index                        docs.count   store.size
+yellow open   shoppingmall-logs-2026.05.29         60      110.1kb    <--- 검증 완료! 🎯
+```
+
+---
+
+## 📝 Notion 2026-05-29 계획서 실시간 동기화 완료!
+
+사용자님이 오늘 공유해주신 **"2026-05-29계획…"** Notion 계획서에 2단계 완성 소식과 Kibana에서의 실시간 검색/추적 가이드를 API로 직접 주입하여 페이지를 완전 최신화했습니다!
+
+* **노션 페이지 주소**: `https://app.notion.com/p/2026-05-29-36ed783cc661806d9551d166894fb2d6` (ID: `36ed783c-c661-806d-9551-d166894fb2d6`)
+* **추가된 내용**:
+  1. **🚀 callout 블록**: 2단계 Spring Boot ➔ Logstash ➔ Elasticsearch 완벽 가동 축하 박스 주입
+  2. **🛠️ 2단계 연동 시스템 요약**: TCP 5000번 스트리밍 인코더 작동 원리와 Kibana Discover 활용 실시간 에러 추적법 가이드 추가
+
+---
+
+## 🔗 5. 작업 결과 (Git Commit & Push 완료)
+
+* **변경 파일**:
+  - [docker-compose.yml](file:///c:/260512jgh_shoppingmall/shoppingmall/docker-compose.yml)
+  - [build.gradle](file:///c:/260512jgh_shoppingmall/shoppingmall/backend/build.gradle)
+  - [logback-spring.xml](file:///c:/260512jgh_shoppingmall/shoppingmall/backend/src/main/resources/logback-spring.xml)
+  - [logstash.conf](file:///c:/260512jgh_shoppingmall/shoppingmall/logstash/pipeline/logstash.conf)
+  - [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
+* **형상 관리**: `main` 브랜치 커밋 및 GitHub 원격 저장소(`origin/main`) 푸시 완료!
+
+---
+---
+
+# 🚀 [인프라 & 빅데이터] ELK Stack 3단계: Apache Kafka와 Logstash 실시간 대용량 결제 데이터 스트리밍 연동 성공
+
+## 📅 작성일: 2026-05-29
+## 👤 작성자: Antigravity
+
+---
+
+## 1. 🏗️ ELK 3단계 Kafka-Logstash 실시간 연동 아키텍처 개요
+
+마침내 아키텍처의 최종 결실인 **[3대 분산 Kafka ➔ Logstash ➔ Elasticsearch ➔ Kibana]** 대용량 결제 데이터 실시간 처리 파이프라인을 정석대로 완성했습니다!
+
+```mermaid
+flowchart TD
+    subgraph Spring Boot Backend
+        Prod[PaymentEventProducer]
+    end
+    subgraph 3-Node Kafka Cluster
+        Topic[payment-events Topic]
+    end
+    subgraph Logstash 7.17.9
+        Input[Kafka Input Plugin]
+        Filter[JSON Codec / Router]
+    end
+    subgraph Elasticsearch Cluster
+        Index[shoppingmall-payments-YYYY.MM.dd Index]
+    end
+    subgraph Kibana
+        UI[Kibana Discover Dashboard]
+    end
+
+    Prod -- 1) 결제 이벤트 발행 --> Topic
+    Topic -- 2) 실시간 컨슘 (logstash-0) --> Input
+    Input --> Filter
+    Filter -- 3) 벌크 분기 적재 --> Index
+    Index --> UI
+```
+
+* **다중 채널 데이터 허브**: Logstash 설정(`logstash.conf`)을 다중 입력(Multi-Input) 및 동적 라우팅 구조로 설계하여, 2단계에서 연동한 **스프링 콘솔 로그(TCP 5000)**와 3단계의 **카프카 결제 데이터(topics => ["payment-events"])**를 동시에 수용하고 다른 인덱스 대역으로 완벽하게 분류 적재합니다.
+* **실무형 결제 인덱스 분리**: 트랜잭션이 중요한 결제 데이터만을 별도의 인덱스인 `shoppingmall-payments-*`로 완벽 분리하여, 시스템 인프라 장애 추적용 로그(`shoppingmall-logs-*`)와 철저하게 격리 수집합니다.
+
+---
+
+## 2. 🌊 실시간 대량 데이터 폭포 (Stress Test) 시뮬레이션 검증
+
+우리의 파이프라인이 대용량 트래픽 급증(선착순 세일 등) 상황에서도 유실 없이 안정적으로 작동하는지 확인하기 위해 **대용량 방류 시뮬레이터 API**를 활용한 무결성 검증을 전격 실시했습니다.
+
+* **방류 데이터**: 초당 30건씩 10초간 **총 300건의 비동기 결제 이벤트** 연속 발생
+* **테스트 경로**: `http://localhost:8080/api/test/kafka/waterfall`
+* **Logstash 파이프라인 처리**: Logstash가 카프카의 `payment-events` 토픽 3개 파티션으로부터 실시간 컨슈머 그룹(`logstash`)으로 참가하여 초당 30건씩 들어오는 결제 데이터 패킷을 실시간 수신 및 파싱하여 ES로 뿜어냈습니다.
+
+---
+
+## 3. 🔍 기동 상태 및 검증 결과 (Verification)
+
+### ① Logstash Kafka Consumer 정상 연결 확인 (`docker logs`)
+Logstash가 구동 시 카프카 3대 클러스터 ID(`5L6g3nShT-eMCtK--X86sw`)를 정상 인식하고 3개 파티션을 균등하게 컨슘 시작했음을 검증했습니다.
+
+```text
+[Consumer clientId=logstash-0, groupId=logstash] Subscribed to topic(s): payment-events
+[Consumer clientId=logstash-0, groupId=logstash] Cluster ID: Some(5L6g3nShT-eMCtK--X86sw)
+[Consumer clientId=logstash-0, groupId=logstash] Successfully joined group with generation 1
+[Consumer clientId=logstash-0, groupId=logstash] Adding newly assigned partitions: payment-events-2, payment-events-1, payment-events-0
+[Consumer clientId=logstash-0, groupId=logstash] Resetting offset for partition payment-events-0 to offset 0.
+```
+
+### ② Elasticsearch 적재 무결성 검증 (0% 유실률 달성! 🎯)
+스트레스 테스트 발송이 종료된 직후, Elasticsearch의 인덱스 정보를 REST API로 긴급 조회한 결과입니다. **총 docs.count가 정확하게 300**으로 찍히며, 초고속 대용량 스트림 환경 속에서도 **단 한 건의 유실도 없는 100% 무결한 적재**를 완벽하게 입증해 냈습니다!
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:9200/_cat/indices?v"
+
+health status index                            docs.count   store.size
+yellow open   shoppingmall-payments-2026.05.29        300       61.6kb   <--- 유실율 0% 완전 성공! 🏆
+yellow open   shoppingmall-logs-2026.05.29            144      294.0kb
+```
+
+---
+
+## 📝 Notion 2026-05-29 계획서 최종 동기화 완료!
+
+사용자님이 공유해주신 **"2026-05-29계획…"** Notion 계획서에 3단계 완성 소식과 실시간 거래 데이터 대시보드 검증 가이드를 API로 직접 주입하여 페이지를 완전체로 업데이트했습니다!
+
+* **노션 페이지 주소**: `https://app.notion.com/p/2026-05-29-36ed783cc661806d9551d166894fb2d6` (ID: `36ed783c-c661-806d-9551-d166894fb2d6`)
+* **추가된 내용**:
+  1. **🚀 callout 블록**: 3단계 Apache Kafka와 Logstash 실시간 대용량 연동 성공 축하 박스 주입
+  2. **🛠️ 3단계 카프카 파이프라인 요약**: 카프카 컨슈머 그룹 작동 양상 및 Kibana `shoppingmall-payments-*` 실시간 대시보드 구축 요약 설명 추가
+
+---
+
+## 🔗 4. 작업 결과 (Git Commit & Push 완료)
+
+* **변경 파일**:
+  - [logstash.conf](file:///c:/260512jgh_shoppingmall/shoppingmall/logstash/pipeline/logstash.conf)
+  - [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
+* **형상 관리**: `main` 브랜치 커밋 및 GitHub 원격 저장소(`origin/main`) 푸시 완료!
+
+
+

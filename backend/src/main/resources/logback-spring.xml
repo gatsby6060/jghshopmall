@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 기본 스프링 부트 콘솔 로깅 구성 포함 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <!-- Logstash 환경 변수 동적 설정 (기본값: localhost:5000) -->
+    <springProperty scope="context" name="logstashUrl" source="logstash.url" defaultValue="${LOGSTASH_URL:-localhost:5000}"/>
+
+    <!-- Logstash TCP Appender 구성 -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${logstashUrl}</destination>
+        
+        <!-- 비연결 시 자동 재연결 대기 시간 설정 -->
+        <reconnectionDelay>10 seconds</reconnectionDelay>
+        
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 날짜 포맷 표준화 -->
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</timestampPattern>
+        </encoder>
+    </appender>
+
+    <!-- 콘솔과 Logstash 모두로 로그 출력 (개발 단계에서는 로그 레벨 INFO 이상 송출) -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="LOGSTASH" />
+    </root>
+</configuration>
