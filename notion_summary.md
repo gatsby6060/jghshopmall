@@ -987,8 +987,61 @@ yellow open   shoppingmall-logs-2026.05.29            144      294.0kb
 
 * **변경 파일**:
   - [logstash.conf](file:///c:/260512jgh_shoppingmall/shoppingmall/logstash/pipeline/logstash.conf)
-  - [notion_summary.md](file:///c:/260512jgh_shoppingmall/shoppingmall/notion_summary.md)
 * **형상 관리**: `main` 브랜치 커밋 및 GitHub 원격 저장소(`origin/main`) 푸시 완료!
+
+---
+---
+
+# 🚀 [인프라 & 빅데이터] ELK Stack 4단계: Kibana 실시간 매출/통계 프리미엄 대시보드 구축 성공 (중간 동기화)
+
+## 📅 작성일: 2026-05-29
+## 👤 작성자: Antigravity
+
+---
+
+## 1. 🏗️ ELK 4단계 Kibana 시각화 대시보드 개요
+Kibana Lens 시각화 도구를 100% 마스터하여, 분산 카프카 결제 데이터(`shoppingmall-payments-*`) 기반의 **2종 프리미엄 실시간 통계 차트 패널**을 하나의 그리드 화면에 조율하고 영구 적재하는 데 대성공했습니다!
+
+```mermaid
+flowchart TD
+    subgraph Elasticsearch Cluster
+        PayIndex[shoppingmall-payments-* Index]
+    end
+    subgraph Kibana Dashboard Grid
+        Panel1[① 오늘 누적 총 매출액 차트]
+        Panel2[② VVIP 최고 매출 기여 고객 Top 5 차트]
+    end
+    
+    PayIndex -- 실시간 Sum 집계 연동 --> Panel1
+    PayIndex -- Terms & Sum 집계 정렬 --> Panel2
+```
+
+---
+
+## 2. 🛠️ 트러블슈팅 및 극복 일지 (Time-range Zoom In 해제)
+### 🚨 문제 상황: `There are no available fields that contain data`
+* **현상**: `shoppingmall-payments-*` 데이터 뷰를 불러왔을 때, 왼쪽 필드 목록에 아무런 데이터 필드가 노출되지 않고 노란색 안내문만 출력되는 제약에 직면했습니다.
+* **원인**: Kibana 상단의 시간 필터 기본값이 `Last 15 minutes` (최근 15분)으로 좁게 잡혀 있어, 그 이전에 테스트 쏜 300건의 결제 스트림 시간대를 감지하지 못했던 현상이었습니다.
+* **해결**: 상단 시간 설정을 오늘 하루를 나타내는 **`Today`**로 폭넓게 전환하고 **`[Refresh]`**를 눌러줌으로써, `amount`, `email`, `@timestamp` 등의 필드를 아름답게 해방시켜 냈습니다!
+* **임시 드릴다운 필터 복구**: 차트 설계 도중 막대를 클릭하여 0.001초의 돋보기 필터가 적용되었던 현상 역시 시간 범위를 다시 **`Today`**로 원복하여 유연하게 대시보드 그리드에 고정 완료했습니다.
+
+---
+
+## 3. 🔍 구축 완료된 2종 프리미엄 대시보드 요약
+### ① [패널 1] 오늘 누적 총 매출액 차트
+* **형태**: 오늘 벌어들인 총금액을 직관적이고 역동적인 세로 막대(기둥) 그래프로 표현.
+* **적용 집계**: `Sum of amount` 계산을 매핑하여 누적 매출 추이를 영구 추적.
+
+### ② [패널 2] VVIP 최고 매출 기여 고객 Top 5 차트
+* **형태**: 가로 막대 차트 (Bar horizontal)
+* **적용 집계**: `Vertical axis`에 `email.keyword`의 **`Terms` (Size: 5)** 매핑, `Horizontal axis`에 누적 결제금액 **`Sum of amount`**을 바인딩하여, 매출 기여도가 가장 높은 최정상 5인의 VVIP 이메일과 누적 거래 규모를 실시간으로 가시화했습니다.
+
+---
+
+## 📝 Notion 2026-05-29 계획서 실시간 동기화 및 Git 반영
+* **노션 페이지 주소**: `https://app.notion.com/p/2026-05-29-36ed783cc661806d9551d166894fb2d6` (ID: `36ed783c-c661-806d-9551-d166894fb2d6`)
+* **형상 관리**: 가이드 변경 사항을 한글 커밋 메시지와 함께 깃허브 원격 저장소(`origin/main`)에 푸시 완료했습니다!
+
 
 
 
