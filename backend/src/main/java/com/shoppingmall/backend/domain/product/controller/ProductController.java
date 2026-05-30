@@ -81,4 +81,11 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.ok(ApiResponse.ok("상품이 삭제되었습니다."));
     }
+
+    @PostMapping("/reindex")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> reindexProducts() {
+        productService.reindexAll();
+        return ResponseEntity.ok(ApiResponse.ok("전체 상품의 엘라스틱서치 재색인이 완료되었습니다."));
+    }
 }

@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
-import { cartApi } from '@/lib/api';
+import { cartApi, searchApi } from '@/lib/api';
 
 export default function Header() {
   const router = useRouter();
@@ -20,10 +20,40 @@ export default function Header() {
   const totalCount = useCartStore((state) => state.totalCount());
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    searchApi.getPopularKeywords()
+      .then((res) => {
+        if (res?.data?.data) {
+          setPopularKeywords(res.data.data);
+        }
+      })
+      .catch((err) => console.error('Failed to fetch popular keywords:', err));
+  }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const delayDebounce = setTimeout(() => {
+      searchApi.getAutocompleteSuggestions(searchQuery)
+        .then((res) => {
+          if (res?.data?.data) {
+            setSuggestions(res.data.data);
+          }
+        })
+        .catch((err) => console.error('Failed to fetch suggestions:', err));
+    }, 200);
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -117,6 +147,10 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowDropdown(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowDropdown(false), 200);
+                }}
                 placeholder={t('searchPlaceholder')}
                 className="w-full border border-gray-300 rounded-full py-2.5 pl-5 pr-12 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
@@ -126,6 +160,75 @@ export default function Header() {
               >
                 <Search size={20} />
               </button>
+
+              {/* Autocomplete / Popular Search Dropdown */}
+              {showDropdown && (
+                <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden transition-all duration-200 ease-out p-4">
+                  {/* Suggestions List */}
+                  {searchQuery.trim() && suggestions.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-2">
+                        <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                        추천 검색어
+                      </h4>
+                      <ul className="space-y-1">
+                        {suggestions.map((suggestion, index) => (
+                          <li key={index}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearchQuery(suggestion);
+                                router.push(`/${locale}/search?keyword=${encodeURIComponent(suggestion)}`);
+                                setShowDropdown(false);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50/50 hover:text-indigo-600 rounded-lg transition flex items-center gap-2"
+                            >
+                              <Search size={14} className="text-gray-400 shrink-0" />
+                              <span>{suggestion}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Popular Keywords List */}
+                  {popularKeywords.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-2">
+                        <span className="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                        실시간 인기 검색어
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 p-1">
+                        {popularKeywords.map((kw, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery(kw);
+                              router.push(`/${locale}/search?keyword=${encodeURIComponent(kw)}`);
+                              setShowDropdown(false);
+                            }}
+                            className="text-left px-3 py-2 text-sm text-gray-700 hover:bg-rose-50/50 hover:text-rose-600 rounded-lg transition flex items-center gap-2"
+                          >
+                            <span className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${index < 3 ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                              {index + 1}
+                            </span>
+                            <span className="truncate">{kw}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {!searchQuery.trim() && popularKeywords.length === 0 && (
+                    <div className="text-center py-6 text-gray-400 text-xs">
+                      인기 검색어가 준비 중입니다.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </form>
 

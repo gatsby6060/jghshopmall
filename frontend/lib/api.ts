@@ -89,6 +89,12 @@ export const productApi = {
   deleteProduct: (id: number) => api.delete(`/api/products/${id}`),
 };
 
+export const searchApi = {
+  getPopularKeywords: () => api.get('/api/search/popular'),
+  getAutocompleteSuggestions: (keyword: string) =>
+    api.get('/api/search/autocomplete', { params: { keyword } }),
+};
+
 export const categoryApi = {
   getCategories: () => api.get('/api/categories'),
   getAllCategories: () => api.get('/api/categories/all'),

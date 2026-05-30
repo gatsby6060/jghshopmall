@@ -6,6 +6,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import com.shoppingmall.backend.domain.product.listener.ProductEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "products")
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners({AuditingEntityListener.class, ProductEntityListener.class})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
