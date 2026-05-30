@@ -9,6 +9,7 @@ import com.shoppingmall.backend.domain.product.entity.Product;
 import com.shoppingmall.backend.domain.product.repository.ProductDocumentRepository;
 import com.shoppingmall.backend.domain.product.repository.ProductRepository;
 import com.shoppingmall.backend.domain.search.service.SearchService;
+import com.shoppingmall.backend.domain.search.service.BadWordService;
 import com.shoppingmall.backend.global.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductDocumentRepository productDocumentRepository;
     private final SearchService searchService;
+    private final BadWordService badWordService;
 
     public Page<ProductResponse> getProducts(Pageable pageable) {
         return productRepository.findByStatus(Product.ProductStatus.ACTIVE, pageable)
@@ -42,6 +44,11 @@ public class ProductService {
     }
 
     public Page<ProductResponse> searchProducts(String keyword, Pageable pageable) {
+        if (badWordService.hasBadWord(keyword)) {
+            log.warn("Product search blocked due to bad word detection: {}", keyword);
+            return Page.empty(pageable);
+        }
+
         searchService.logSearch(keyword);
 
         try {
@@ -58,6 +65,7 @@ public class ProductService {
         return productRepository.searchByKeyword(keyword, pageable)
                 .map(ProductResponse::from);
     }
+
 
     public ProductResponse getProduct(Long id) {
         Product product = productRepository.findById(id)

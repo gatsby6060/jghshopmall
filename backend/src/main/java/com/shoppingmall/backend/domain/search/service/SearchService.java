@@ -23,6 +23,7 @@ public class SearchService {
 
     private final SearchKeywordLogRepository keywordLogRepository;
     private final ProductDocumentRepository productDocumentRepository;
+    private final BadWordService badWordService;
 
     @Transactional
     public void logSearch(String keyword) {
@@ -30,6 +31,12 @@ public class SearchService {
             return;
         }
         try {
+            // 비속어가 감지되면 로깅을 건너뜀 (인기 검색어 오염 방지)
+            if (badWordService.hasBadWord(keyword)) {
+                log.warn("Search keyword logging skipped due to bad word detection: {}", keyword);
+                return;
+            }
+
             String trimmedKeyword = keyword.trim().toLowerCase();
             if (trimmedKeyword.length() > 1) {
                 keywordLogRepository.save(new SearchKeywordLog(trimmedKeyword));
@@ -53,6 +60,10 @@ public class SearchService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return List.of();
         }
+        // 자동완성 질의 시 비속어가 감지되면 곧바로 빈 제안 목록 반환
+        if (badWordService.hasBadWord(keyword)) {
+            return List.of();
+        }
         try {
             Pageable limit = PageRequest.of(0, 10);
             return productDocumentRepository.findByNamePrefix(keyword.trim(), limit)
@@ -66,3 +77,4 @@ public class SearchService {
         }
     }
 }
+
