@@ -14,4 +14,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT c FROM Category c WHERE c.active = true ORDER BY c.sortOrder")
     List<Category> findAllActive();
+
+    List<Category> findByNameContainingAndActiveTrue(String name);
+    List<Category> findByIdInAndActiveTrue(List<Long> ids);
 }

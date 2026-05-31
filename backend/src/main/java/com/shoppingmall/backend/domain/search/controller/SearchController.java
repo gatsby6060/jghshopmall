@@ -2,6 +2,7 @@ package com.shoppingmall.backend.domain.search.controller;
 
 import com.shoppingmall.backend.domain.search.service.SearchService;
 import com.shoppingmall.backend.domain.search.service.BadWordService;
+import com.shoppingmall.backend.domain.search.dto.AutocompleteResponseDto;
 import com.shoppingmall.backend.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class SearchController {
     }
 
     @GetMapping("/autocomplete")
-    public ResponseEntity<ApiResponse<List<String>>> getAutocompleteSuggestions(@RequestParam String keyword) {
+    public ResponseEntity<ApiResponse<AutocompleteResponseDto>> getAutocompleteSuggestions(@RequestParam String keyword) {
         return ResponseEntity.ok(ApiResponse.ok(searchService.getAutocompleteSuggestions(keyword)));
     }
 

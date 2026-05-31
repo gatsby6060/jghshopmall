@@ -22,6 +22,12 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  interface SuggestedCategory {
+    id: number;
+    name: string;
+    fullPath: string;
+  }
+  const [suggestedCategories, setSuggestedCategories] = useState<SuggestedCategory[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
@@ -41,13 +47,15 @@ export default function Header() {
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSuggestions([]);
+      setSuggestedCategories([]);
       return;
     }
     const delayDebounce = setTimeout(() => {
       searchApi.getAutocompleteSuggestions(searchQuery)
         .then((res) => {
           if (res?.data?.data) {
-            setSuggestions(res.data.data);
+            setSuggestions(res.data.data.suggestions || []);
+            setSuggestedCategories(res.data.data.categories || []);
           }
         })
         .catch((err) => console.error('Failed to fetch suggestions:', err));
@@ -92,6 +100,24 @@ export default function Header() {
   const handleLogout = () => {
     clearAuth();
     router.push(`/${locale}`);
+  };
+
+  const highlightMatch = (text: string, query: string) => {
+    if (!query) return <span>{text}</span>;
+    const parts = text.split(new RegExp(`(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi'));
+    return (
+      <span>
+        {parts.map((part, i) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <span key={i} className="text-indigo-600 font-semibold">
+              {part}
+            </span>
+          ) : (
+            part
+          )
+        )}
+      </span>
+    );
   };
 
   return (
@@ -165,29 +191,72 @@ export default function Header() {
               {showDropdown && (
                 <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden transition-all duration-200 ease-out p-4">
                   {/* Suggestions List */}
-                  {searchQuery.trim() && suggestions.length > 0 && (
+                  {searchQuery.trim() && (suggestions.length > 0 || suggestedCategories.length > 0) && (
                     <div className="mb-4">
                       <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-2">
                         <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-                        추천 검색어
+                        추천 검색어 및 카테고리
                       </h4>
                       <ul className="space-y-1">
-                        {suggestions.map((suggestion, index) => (
-                          <li key={index}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSearchQuery(suggestion);
-                                router.push(`/${locale}/search?keyword=${encodeURIComponent(suggestion)}`);
-                                setShowDropdown(false);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50/50 hover:text-indigo-600 rounded-lg transition flex items-center gap-2"
-                            >
-                              <Search size={14} className="text-gray-400 shrink-0" />
-                              <span>{suggestion}</span>
-                            </button>
-                          </li>
-                        ))}
+                        {/* 1. Exact query item containing categories nested below it */}
+                        <li>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              router.push(`/${locale}/search?keyword=${encodeURIComponent(searchQuery)}`);
+                              setShowDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-indigo-50/50 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 font-semibold"
+                          >
+                            <Search size={14} className="text-indigo-500 shrink-0" />
+                            <span>{highlightMatch(searchQuery, searchQuery)}</span>
+                          </button>
+
+                          {/* Matching Categories nested below exact query */}
+                          {suggestedCategories.length > 0 && (
+                            <div className="pl-6 pr-2 py-1 space-y-1 bg-gray-50/50 rounded-lg mt-1 border border-gray-100/50">
+                              {suggestedCategories.map((cat) => (
+                                <button
+                                  key={cat.id}
+                                  type="button"
+                                  onClick={() => {
+                                    router.push(`/${locale}/categories/${cat.id}`);
+                                    setShowDropdown(false);
+                                  }}
+                                  className="w-full text-left pl-3 pr-3 py-1.5 text-xs text-gray-500 hover:bg-indigo-50/70 hover:text-indigo-600 rounded-md transition flex items-center gap-1.5"
+                                >
+                                  <span className="text-indigo-400 font-medium">↳</span>
+                                  <span className="truncate">{highlightMatch(cat.fullPath, searchQuery)}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </li>
+
+                        {/* Subtle divider if we have other autocomplete keyword suggestions */}
+                        {suggestions.filter((s) => s.toLowerCase() !== searchQuery.toLowerCase()).length > 0 && (
+                          <div className="border-t border-gray-100/80 my-2 px-2" />
+                        )}
+
+                        {/* 2. Other autocomplete suggestion keywords containing the search query */}
+                        {suggestions
+                          .filter((s) => s.toLowerCase() !== searchQuery.toLowerCase())
+                          .map((suggestion, index) => (
+                            <li key={index}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSearchQuery(suggestion);
+                                  router.push(`/${locale}/search?keyword=${encodeURIComponent(suggestion)}`);
+                                  setShowDropdown(false);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-indigo-50/50 hover:text-indigo-600 rounded-lg transition flex items-center gap-2"
+                              >
+                                <Search size={14} className="text-gray-400 shrink-0" />
+                                <span>{highlightMatch(suggestion, searchQuery)}</span>
+                              </button>
+                            </li>
+                          ))}
                       </ul>
                     </div>
                   )}

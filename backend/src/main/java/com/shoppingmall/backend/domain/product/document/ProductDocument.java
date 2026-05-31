@@ -2,6 +2,7 @@ package com.shoppingmall.backend.domain.product.document;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -63,8 +64,8 @@ public class ProductDocument {
     @Field(type = FieldType.Integer)
     private int salesCount;
 
-    @Field(type = FieldType.Date)
-    private LocalDateTime createdAt;
+    @Field(type = FieldType.Keyword)
+    private String createdAt;
 
     public static ProductDocument from(Product product) {
         return ProductDocument.builder()
@@ -82,7 +83,7 @@ public class ProductDocument {
                 .status(product.getStatus() != null ? product.getStatus().name() : null)
                 .viewCount(product.getViewCount())
                 .salesCount(product.getSalesCount())
-                .createdAt(product.getCreatedAt())
+                .createdAt(product.getCreatedAt() != null ? product.getCreatedAt().toString() : null)
                 .build();
     }
 
@@ -102,7 +103,24 @@ public class ProductDocument {
                 status,
                 viewCount,
                 salesCount,
-                createdAt
+                parseCreatedAt(createdAt)
         );
+    }
+
+    private java.time.LocalDateTime parseCreatedAt(String val) {
+        if (val == null) return null;
+        try {
+            if (val.contains("T")) {
+                String clean = val;
+                if (val.length() > 19) {
+                    clean = val.substring(0, 19);
+                }
+                return java.time.LocalDateTime.parse(clean);
+            } else {
+                return java.time.LocalDate.parse(val).atStartOfDay();
+            }
+        } catch (Exception e) {
+            return java.time.LocalDateTime.now();
+        }
     }
 }
