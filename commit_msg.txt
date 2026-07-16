@@ -1,0 +1,6 @@
+feat: 프론트엔드 Vue.js 마이그레이션 완료
+
+- Next.js에서 Vue 3 + Vite 환경으로 프론트엔드 전체 이관
+- Pinia 상태 관리 및 Vue Router 기반 라우팅 적용
+- 카테고리, 장바구니, 주문/결제(포트원), 주소 검색(다음) 연동 완료
+- Docker(Nginx) 배포 환경 구축 및 docker-compose.yml 연동 추가
