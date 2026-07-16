@@ -1,6 +1,6 @@
 # ShopMall - 풀스택 쇼핑몰 프로젝트
 
-Java 21, Spring Boot 3.4, Next.js 15 기반의 현대적인 풀스택 쇼핑몰 애플리케이션입니다.
+Java 21, Spring Boot 3.4 기반 백엔드와 **Next.js 15 / Vue.js 3 (Vite) 듀얼 프론트엔드**를 지원하는 현대적인 풀스택 쇼핑몰 애플리케이션입니다.
 
 ## 🚀 기술 스택
 
@@ -12,12 +12,19 @@ Java 21, Spring Boot 3.4, Next.js 15 기반의 현대적인 풀스택 쇼핑몰 
 - **ORM**: Spring Data JPA (Hibernate 6.6)
 - **Security**: Spring Security, JWT, OAuth2 Client
 
-### Frontend
+### Frontend 1 (Next.js)
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand, TanStack Query (React Query)
 - **Form Handling**: React Hook Form, Zod
+
+### Frontend 2 (Vue.js)
+- **Framework**: Vue 3 + Vite
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: Pinia
+- **Routing**: Vue Router
 
 ### Infrastructure
 - **Container**: Docker, Docker Compose (Multi-stage Build)
@@ -65,7 +72,8 @@ docker-compose up -d --build
 ```
 
 ### 3. 접속 주소
-- **Frontend (쇼핑몰)**: http://localhost:3000
+- **Frontend (Next.js)**: http://localhost:4000
+- **Frontend (Vue.js)**: http://localhost:5173
 - **Backend API**: http://localhost:8080
 - **관리자 계정**: `admin@shopmall.com` / `admin123`
 
@@ -84,6 +92,12 @@ shoppingmall/
 │   ├── store/              # Zustand 전역 상태 관리
 │   ├── types/              # TypeScript 타입 정의
 │   └── Dockerfile          # 프론트엔드 멀티 스테이지 빌드 (Standalone)
+├── frontend-vue/           # Vue.js 프론트엔드 (새로 추가됨)
+│   ├── src/views/          # 페이지 컴포넌트
+│   ├── src/components/     # UI 컴포넌트
+│   ├── src/store/          # Pinia 전역 상태 관리
+│   ├── src/router/         # Vue Router 설정
+│   └── Dockerfile          # Vue.js + Nginx 빌드 및 배포
 ├── database/
 │   └── init/               # MariaDB 초기화 SQL 스크립트
 └── docker-compose.yml      # 전체 서비스 컨테이너 오케스트레이션
