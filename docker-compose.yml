@@ -57,8 +57,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092
       LOGSTASH_URL: logstash:5000
       SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -169,8 +169,8 @@ services:
     environment:
       NEXTAUTH_URL: ${NEXTAUTH_URL}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-    ports:
-      - "4000:3000"
+#    ports:
+#      - "4000:3000"
     depends_on:
       backend:
         condition: service_healthy
@@ -184,8 +184,8 @@ services:
       dockerfile: Dockerfile
     container_name: shoppingmall-frontend-vue
     restart: unless-stopped
-    ports:
-      - "5173:5173"
+#    ports:
+#      - "5173:5173"
     depends_on:
       backend:
         condition: service_healthy
