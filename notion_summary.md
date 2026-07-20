@@ -1042,6 +1042,173 @@ flowchart TD
 * **노션 페이지 주소**: `https://app.notion.com/p/2026-05-29-36ed783cc661806d9551d166894fb2d6` (ID: `36ed783c-c661-806d-9551-d166894fb2d6`)
 * **형상 관리**: 가이드 변경 사항을 한글 커밋 메시지와 함께 깃허브 원격 저장소(`origin/main`)에 푸시 완료했습니다!
 
+---
+---
 
+# 🌐 [인프라 구축] Nginx 리버스 프록시로 3개 서비스 통합 연동
 
+## 📅 작성일: 2026-07-20
+## 👤 작성자: Antigravity
 
+---
+
+## 1. 🎯 목표 (Goal)
+프로젝트를 구성하는 **3개의 독립된 프로그램**(Next.js 프론트엔드, Vue.js 관리자 프론트엔드, Spring Boot 백엔드)을 **Docker 기반의 Nginx 리버스 프록시**를 통해 하나로 통합 연결하는 작업입니다.
+
+---
+
+## 2. 📊 프로젝트 전체 구조 분석
+
+### 기술 스택 요약
+
+| 구분 | 기술 | 버전 | 역할 |
+|------|------|------|------|
+| **Backend** | Java + Spring Boot | Java 21, Spring Boot 3.5.0 | REST API 서버 |
+| **Frontend (Main)** | TypeScript + Next.js + React | Next.js 15, React 19 | 메인 쇼핑몰 UI |
+| **Frontend (Admin)** | TypeScript + Vue.js + Vite | Vue 3, Vite | 관리자 페이지 UI |
+| **DB** | MariaDB | 11.4 LTS | 주 데이터베이스 |
+| **Search** | Elasticsearch | 7.17.21 | 상품 검색 엔진 |
+| **Message Broker** | Apache Kafka | 3.7.0 (3대 클러스터) | 이벤트/로그 메시징 |
+| **Log Pipeline** | Logstash | 7.17.9 | 로그 수집·변환 |
+| **Monitoring** | Kibana | 7.17.21 | 로그/검색 시각화 |
+| **Reverse Proxy** | Nginx | alpine (신규 추가) | 트래픽 라우팅 |
+| **Container** | Docker + Docker Compose | 3.9 | 컨테이너 오케스트레이션 |
+
+### 시스템 아키텍처 다이어그램
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       Docker Network                            │
+│                    (shoppingmall-net)                            │
+│                                                                 │
+│  ┌─────────────────────────────────────────────┐                │
+│  │          🌐 Nginx (Reverse Proxy)           │                │
+│  │         ┌──────────┬──────────┐             │                │
+│  │         │ Port 80  │ Port 81  │             │                │
+│  │         └────┬─────┴────┬─────┘             │                │
+│  └──────────────┼──────────┼───────────────────┘                │
+│                 │          │                                     │
+│       ┌─────── ▼ ──┐  ┌── ▼ ────────┐                          │
+│       │  Next.js   │  │  Vue.js     │                           │
+│       │  Frontend  │  │  Admin      │                           │
+│       │  :3000     │  │  :5173      │                           │
+│       └────────────┘  └─────────────┘                           │
+│                 │          │                                     │
+│                 │  /api/*  │  /api/*                             │
+│                 └────┬─────┘                                    │
+│                      ▼                                          │
+│            ┌──────────────────┐                                  │
+│            │  Spring Boot     │                                  │
+│            │  Backend :8080   │                                  │
+│            └───┬──────┬──────┘                                  │
+│                │      │                                         │
+│       ┌────── ▼ ┐  ┌─ ▼ ───────────┐                           │
+│       │ MariaDB │  │ Elasticsearch │                            │
+│       │ :3306   │  │ :9200         │                            │
+│       └─────────┘  └───────────────┘                            │
+│                                                                 │
+│   ┌──────────────────────────────────────────┐                  │
+│   │  Kafka Cluster (3 Brokers) → Logstash    │                  │
+│   └──────────────────────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. 🛠️ 구축 작업 내역 (Implementation Details)
+
+### ① [신규 생성] `nginx/nginx.conf` — Nginx 리버스 프록시 설정
+
+포트별로 두 개의 `server` 블록을 구성하여 각 프론트엔드와 백엔드를 연결합니다.
+
+**포트 80 (Next.js 메인 쇼핑몰)**:
+```nginx
+server {
+    listen 80;
+    # /api/*, /oauth2/*, /login/oauth2/* → backend:8080
+    # 나머지 모든 요청               → frontend:3000 (Next.js)
+}
+```
+
+**포트 81 (Vue.js 관리자 페이지)**:
+```nginx
+server {
+    listen 81;
+    # /api/*, /oauth2/*, /login/oauth2/* → backend:8080
+    # 나머지 모든 요청               → frontend-vue:5173 (Vue.js)
+}
+```
+
+**핵심 설정 포인트**:
+* `proxy_set_header Upgrade / Connection "upgrade"` — WebSocket/HMR 지원
+* `proxy_set_header X-Real-IP / X-Forwarded-For` — 원본 클라이언트 IP 전달
+* OAuth2 관련 경로 3종(`/api/`, `/oauth2/`, `/login/oauth2/`)을 백엔드로 프록시
+
+### ② [신규 생성] `nginx/Dockerfile`
+
+```dockerfile
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80 81
+```
+* 경량 `nginx:alpine` 이미지 기반
+* 커스텀 설정 파일을 컨테이너에 복사
+
+### ③ [수정] `docker-compose.yml` — Nginx 서비스 추가
+
+```yaml
+nginx:
+  build:
+    context: ./nginx
+    dockerfile: Dockerfile
+  container_name: shoppingmall-nginx
+  restart: unless-stopped
+  ports:
+    - "80:80"    # Next.js 메인 쇼핑몰
+    - "81:81"    # Vue.js 관리자 페이지
+  depends_on:
+    - frontend
+    - frontend-vue
+    - backend
+  networks:
+    - shoppingmall-net
+```
+
+---
+
+## 4. 🚀 실행 방법 (How to Run)
+
+```bash
+# 전체 서비스 빌드 및 실행
+docker-compose up -d --build
+
+# Nginx 서비스만 재시작 (설정 변경 시)
+docker-compose restart nginx
+```
+
+### 접속 URL
+
+| 서비스 | URL | 설명 |
+|--------|-----|------|
+| 메인 쇼핑몰 | `http://localhost` | Next.js 프론트엔드 (포트 80) |
+| 관리자 페이지 | `http://localhost:81` | Vue.js 프론트엔드 (포트 81) |
+| API 직접 접근 | `http://localhost/api/...` | Nginx를 통한 백엔드 API |
+
+---
+
+## 5. 📁 변경된 파일 목록
+
+| 파일 | 상태 | 설명 |
+|------|------|------|
+| `nginx/nginx.conf` | 🆕 신규 | Nginx 리버스 프록시 설정 |
+| `nginx/Dockerfile` | 🆕 신규 | Nginx Docker 이미지 빌드 파일 |
+| `docker-compose.yml` | ✏️ 수정 | Nginx 서비스 추가 |
+
+---
+
+## 💡 6. 향후 개선 가능 사항 (선택사항)
+
+1. **외부 포트 노출 제거**: `frontend`, `frontend-vue`, `backend`의 `ports` 항목을 제거하여 Nginx를 통해서만 접근 가능하도록 보안 강화
+2. **SSL/TLS 적용**: Let's Encrypt 등을 활용한 HTTPS 인증서 적용
+3. **도메인 기반 라우팅**: 포트 분리 대신 `shop.example.com` / `admin.example.com` 등 도메인 기반 분리
+4. **Gzip 압축 활성화**: 정적 자원 응답 크기 최적화

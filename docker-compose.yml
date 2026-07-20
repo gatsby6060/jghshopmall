@@ -240,6 +240,23 @@ services:
     networks:
       - shoppingmall-net
 
+  # ===== Nginx Reverse Proxy =====
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: shoppingmall-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"
+    depends_on:
+      - frontend
+      - frontend-vue
+      - backend
+    networks:
+      - shoppingmall-net
+
 volumes:
   db_data:
     driver: local
